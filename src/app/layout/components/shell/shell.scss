@@ -1,0 +1,29 @@
+// Material's list/toolbar/sidenav look is driven by component-specific CSS
+// custom properties (MDC tokens), not plain background/color — Tailwind
+// utility classes on the host element can't reach them, so this stays SCSS.
+.shell-nav {
+  --mat-sidenav-container-shape: 0;
+  background: #1e1d1b !important;
+  color: white !important;
+}
+
+.shell-link {
+  --mat-list-list-item-label-text-color: white;
+  --mat-list-list-item-hover-label-text-color: white;
+  --mat-list-list-item-focus-label-text-color: white;
+  color: #b9b4ac;
+}
+
+.shell-link-active {
+  --mat-list-list-item-label-text-color: #1e1d1b;
+  --mat-list-list-item-hover-label-text-color: #1e1d1b;
+  --mat-list-list-item-focus-label-text-color: #1e1d1b;
+  background: white !important;
+  color: #1e1d1b !important;
+
+
+}
+
+.shell-toolbar {
+  --mat-toolbar-container-background-color: #fff;
+}

@@ -1,0 +1,19 @@
+// Hiding the mat-form-field hint/error row and mat-chip's MDC-token colors
+// both need to reach Material's internal DOM — not doable with utility
+// classes on the host, so this stays SCSS.
+.dense-field {
+  ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+}
+
+::ng-deep {
+  .status-chip--draft { background: #efeceb !important; color: #5f5a54 !important; }
+  .status-chip--pending-approval { background: #fdf0dc !important; color: #8a5a12 !important; }
+  .status-chip--approved { background: #e8eef8 !important; color: #1f4b8f !important; }
+  .status-chip--sent-to-supplier { background: #efe9f7 !important; color: #5b3f8c !important; }
+  .status-chip--partially-received { background: #fdf0dc !important; color: #8a5a12 !important; }
+  .status-chip--fully-received { background: #e6f2ea !important; color: #1c6b3f !important; }
+  .status-chip--closed { background: #efeceb !important; color: #5f5a54 !important; }
+  .status-chip--cancelled { background: #fbe9e7 !important; color: #9a2b20 !important; }
+}

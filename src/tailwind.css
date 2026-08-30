@@ -1,0 +1,33 @@
+/*
+ * Angular Material's component styles are unlayered CSS, which always beats
+ * a layered rule under the CSS Cascade Layers spec regardless of specificity
+ * or source order — so a plain Tailwind utility can never override Material
+ * without `!important`. Compiling every utility as `!important` here means
+ * any `bg-*` (or other) utility picked per-component on a mat-table/mat-*
+ * element just works, without needing the `!` modifier at each call site.
+ */
+@import "tailwindcss" important;
+
+@theme {
+  --color-shell: #1e1d1b;
+  --color-shell-border: #2e2c29;
+  --color-shell-text: #b9b4ac;
+  --color-shell-text-strong: #f4f2ee;
+  --color-shell-text-muted: #807a72;
+  --color-shell-active: #d0c9bf;
+
+  --color-page: #f5f4f1;
+  --color-surface: #ffffff;
+  --color-border: #e4e1db;
+  --color-border-soft: #f1eee9;
+
+  --color-ink: #1b1a18;
+  --color-ink-soft: #5f5a54;
+  --color-ink-muted: #75706a;
+  --color-ink-faint: #8a847c;
+
+  --color-accent: #0d6e6e;
+  --color-accent-deep: #0a5252;
+
+  --font-mono: 'Courier New', monospace;
+}

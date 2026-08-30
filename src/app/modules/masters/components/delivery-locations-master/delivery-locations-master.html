@@ -1,0 +1,60 @@
+<div>
+  <div class="flex justify-between items-center mb-3">
+    <div class="text-sm text-ink-muted">Where suppliers deliver goods to.</div>
+    @if (!editing()) {
+      <button mat-flat-button color="primary" (click)="startCreate()">+ Add location</button>
+    }
+  </div>
+
+  @if (editing()) {
+    <div class="bg-white border border-border rounded-md p-4 mb-3">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
+        <mat-form-field appearance="outline" class="col-span-2">
+          <mat-label>Location name</mat-label>
+          <input matInput [(ngModel)]="name" />
+        </mat-form-field>
+      </div>
+      @if (editing() !== 'new') {
+        <label class="flex items-center gap-2 mt-2 text-sm">
+          <input type="checkbox" [(ngModel)]="isActive" />
+          Active
+        </label>
+      }
+      <div class="flex gap-2 mt-3">
+        <button mat-stroked-button (click)="cancel()">Cancel</button>
+        <button mat-flat-button color="primary" [disabled]="saving()" (click)="save()">Save</button>
+      </div>
+    </div>
+  }
+
+  @if (!loading()) {
+    <table mat-table [dataSource]="locations()" class="w-full bg-white rounded-md overflow-hidden">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let row">
+          <span [class]="row.is_active ? 'text-green-700' : 'text-ink-muted'">
+            {{ row.is_active ? 'Active' : 'Inactive' }}
+          </span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="edit">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let row">
+          <button mat-button (click)="startEdit(row)">Edit</button>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="delete">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let row">
+          <button mat-button color="warn" (click)="remove(row)">Delete</button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+  }
+</div>

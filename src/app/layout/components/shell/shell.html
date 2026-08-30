@@ -1,0 +1,40 @@
+<mat-sidenav-container class="h-screen w-full">
+  <mat-sidenav mode="side" opened disableClose class="shell-nav !w-56 !border-0 flex flex-col">
+    <div class="flex items-center gap-2.5 px-4 py-4 border-b border-shell-border">
+      <div class="w-7.5 h-7.5 rounded-md bg-accent text-white flex items-center justify-center font-bold text-xs">
+        RB
+      </div>
+      <div class="flex flex-col gap-px">
+        <div class="text-shell-text-strong font-semibold text-[13px]">RSR BAKES</div>
+        <div class="text-[10px] tracking-wider uppercase text-shell-text-muted">Operations &amp; Accounts</div>
+      </div>
+    </div>
+
+    <mat-nav-list class="!flex-1 !p-2">
+      @for (item of navItems; track item.path) {
+        <a
+          mat-list-item
+          [routerLink]="item.path"
+          routerLinkActive="shell-link-active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          class="shell-link !rounded-md !mb-0.5 !text-[13px]"
+        >
+          {{ item.label }}
+        </a>
+      }
+    </mat-nav-list>
+
+    <div class="px-3.5 py-2.5 border-t border-shell-border text-[10.5px] text-shell-text-muted">
+      FY 2026&ndash;27 &middot; Kollam Unit
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="!bg-page">
+    <mat-toolbar class="shell-toolbar !bg-white !border-b !border-border !text-ink">
+      <span>{{ activeTabLabel() }}</span>
+    </mat-toolbar>
+    <div>
+      <router-outlet />
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>
