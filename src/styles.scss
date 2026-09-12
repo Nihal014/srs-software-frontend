@@ -52,3 +52,41 @@ body {
     display: none;
   }
 }
+
+/* ----------------------------------------------------------------------------
+   Status pill — one shared palette so every status/active column across the
+   app (PO list & detail, Masters, Users) renders the same chip instead of
+   each screen inventing its own colors. Pair with the shape utility classes
+   (inline-flex items-center rounded-2xl px-2.5 py-0.5 text-xs shadow-md
+   font-medium whitespace-nowrap) on the element itself.
+   ---------------------------------------------------------------------------- */
+.status-chip--draft,
+.status-chip--closed,
+.status-chip--inactive {
+  background: #efeceb;
+  color: #5f5a54;
+}
+.status-chip--pending-approval,
+.status-chip--partially-received,
+.status-chip--pending {
+  background: #fdf0dc;
+  color: #8a5a12;
+}
+.status-chip--approved {
+  background: #e8eef8;
+  color: #1f4b8f;
+}
+.status-chip--sent-to-supplier {
+  background: #efe9f7;
+  color: #5b3f8c;
+}
+.status-chip--fully-received,
+.status-chip--active {
+  background: #e6f2ea;
+  color: #1c6b3f;
+}
+.status-chip--cancelled,
+.status-chip--rejected {
+  background: #fbe9e7;
+  color: #9a2b20;
+}

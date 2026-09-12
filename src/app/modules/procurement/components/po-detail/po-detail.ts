@@ -14,6 +14,7 @@ import { PoService } from '../../po.service';
 import { SuppliersService } from 'app/shared/services/suppliers.service';
 import { ItemsService } from 'app/shared/services/items.service';
 import { DeliveryLocationsService } from 'app/shared/services/delivery-locations.service';
+import { AuthService } from 'app/core/services/auth.service';
 import type { Supplier } from 'app/shared/models/supplier.model';
 import type { Item } from 'app/shared/models/item.model';
 import type { DeliveryLocation } from 'app/shared/models/delivery-location.model';
@@ -62,6 +63,7 @@ export class PoDetail implements OnInit {
   private itemsService = inject(ItemsService);
   private deliveryLocationsService = inject(DeliveryLocationsService);
   private snackBar = inject(MatSnackBar);
+  readonly auth = inject(AuthService);
 
   readonly deliveryLocations = signal<DeliveryLocation[]>([]);
   readonly paymentTerms = PAYMENT_TERMS;

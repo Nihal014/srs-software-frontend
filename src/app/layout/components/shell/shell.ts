@@ -6,10 +6,15 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { AuthService } from 'app/core/services/auth.service';
+import { USER_ROLE_LABEL } from 'app/shared/models/user.model';
 
 interface NavItem {
   label: string;
   path: string;
+  adminOnly?: boolean;
 }
 
 @Component({
@@ -23,18 +28,25 @@ interface NavItem {
     MatSidenavModule,
     MatListModule,
     MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
   ],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
 })
 export class Shell {
   private readonly router = inject(Router);
+  readonly auth = inject(AuthService);
+  readonly roleLabel = USER_ROLE_LABEL;
 
-  readonly navItems: NavItem[] = [
+  private readonly allNavItems: NavItem[] = [
     { label: 'Purchase Orders', path: '/procurement' },
     { label: 'Goods Receipt (GRN)', path: '/grn' },
     { label: 'Masters', path: '/masters' },
+    { label: 'Users', path: '/users', adminOnly: true },
   ];
+
+  readonly navItems = computed(() => this.allNavItems.filter((item) => !item.adminOnly || this.auth.isAdmin()));
 
   private readonly navigationEnd = toSignal(
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)),
@@ -43,6 +55,6 @@ export class Shell {
   readonly activeTabLabel = computed(() => {
     this.navigationEnd();
     const url = this.router.url;
-    return this.navItems.find((item) => url.startsWith(item.path))?.label ?? 'RSR Bakes ERP';
+    return this.navItems().find((item) => url.startsWith(item.path))?.label ?? 'RSR Bakes ERP';
   });
 }

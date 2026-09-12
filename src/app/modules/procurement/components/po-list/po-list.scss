@@ -1,8 +1,3 @@
-.status-chip--draft { background: #efeceb; color: #5f5a54; }
-.status-chip--pending-approval { background: #fdf0dc; color: #8a5a12; }
-.status-chip--approved { background: #e8eef8; color: #1f4b8f; }
-.status-chip--sent-to-supplier { background: #efe9f7; color: #5b3f8c; }
-.status-chip--partially-received { background: #fdf0dc; color: #8a5a12; }
-.status-chip--fully-received { background: #e6f2ea; color: #1c6b3f; }
-.status-chip--closed { background: #efeceb; color: #5f5a54; }
-.status-chip--cancelled { background: #fbe9e7; color: #9a2b20; }
+// Status pill colors now live globally in styles.scss (.status-chip--*) so every
+// table (Masters, Users, GRN, PO) shares one palette instead of each screen
+// redefining it.

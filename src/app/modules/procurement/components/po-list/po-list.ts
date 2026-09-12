@@ -47,6 +47,7 @@ export class PoList implements OnInit {
     'qty_received',
     'qtyOutstanding',
     'value',
+    'action',
   ];
 
   readonly statusFilters: StatusFilter[] = [

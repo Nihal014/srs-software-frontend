@@ -11,7 +11,7 @@
     </div>
 
     <mat-nav-list class="!flex-1 !p-2">
-      @for (item of navItems; track item.path) {
+      @for (item of navItems(); track item.path) {
         <a
           mat-list-item
           [routerLink]="item.path"
@@ -30,8 +30,19 @@
   </mat-sidenav>
 
   <mat-sidenav-content class="!bg-page">
-    <mat-toolbar class="shell-toolbar !bg-white !border-b !border-border !text-ink">
+    <mat-toolbar class="shell-toolbar !bg-white !border-b !border-border !text-ink flex items-center justify-between">
       <span>{{ activeTabLabel() }}</span>
+      @if (auth.currentUser(); as user) {
+        <div class="flex items-center gap-3">
+          <div class="text-right leading-tight">
+            <div class="text-[12.5px] font-medium">{{ user.name }}</div>
+            <div class="text-[10.5px] text-ink-muted">{{ roleLabel[user.role] }}</div>
+          </div>
+          <button mat-icon-button (click)="auth.logout()" aria-label="Log out" matTooltip="Log out">
+            <mat-icon>logout</mat-icon>
+          </button>
+        </div>
+      }
     </mat-toolbar>
     <div>
       <router-outlet />

@@ -9,48 +9,48 @@
   @if (loading()) {
     <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
   } @else {
-    <table mat-table [dataSource]="rows()" class="w-full bg-white rounded-md overflow-hidden">
+    <table mat-table [dataSource]="rows()" class="w-full rounded-md overflow-hidden">
       <ng-container matColumnDef="grn_number">
-        <th mat-header-cell *matHeaderCellDef>GRN Number</th>
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">GRN Number</th>
         <td mat-cell *matCellDef="let row">
-          <a [routerLink]="['/grn', row.id]" class="text-accent font-mono no-underline hover:underline">{{ row.grn_number }}</a>
+          <a [routerLink]="['/grn', row.id]" class="text-accent font-medium underline">{{ row.grn_number }}</a>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="po_number">
-        <th mat-header-cell *matHeaderCellDef>Against PO</th>
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Against PO</th>
         <td mat-cell *matCellDef="let row">
-          <a [routerLink]="['/procurement', row.purchase_order_id]" class="text-accent font-mono no-underline hover:underline">{{ row.po_number }}</a>
+          <a [routerLink]="['/procurement', row.purchase_order_id]" class="text-accent font-medium underline">{{ row.po_number }}</a>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="supplier_name">
-        <th mat-header-cell *matHeaderCellDef>Supplier</th>
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Supplier</th>
         <td mat-cell *matCellDef="let row">{{ row.supplier_name }}</td>
       </ng-container>
 
       <ng-container matColumnDef="received_date">
-        <th mat-header-cell *matHeaderCellDef>Date</th>
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Date</th>
         <td mat-cell *matCellDef="let row">{{ row.received_date | date: 'd MMM y' }}</td>
       </ng-container>
 
       <ng-container matColumnDef="qty_received">
-        <th mat-header-cell *matHeaderCellDef class="text-right">Received</th>
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Received</th>
         <td mat-cell *matCellDef="let row" class="text-right">{{ row.qty_received }}</td>
       </ng-container>
 
       <ng-container matColumnDef="qty_accepted">
-        <th mat-header-cell *matHeaderCellDef class="text-right">Accepted</th>
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Accepted</th>
         <td mat-cell *matCellDef="let row" class="text-right">{{ row.qty_accepted }}</td>
       </ng-container>
 
       <ng-container matColumnDef="qty_rejected">
-        <th mat-header-cell *matHeaderCellDef class="text-right">Rejected</th>
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Rejected</th>
         <td mat-cell *matCellDef="let row" class="text-right">{{ row.qty_rejected }}</td>
       </ng-container>
 
       <ng-container matColumnDef="batch_numbers">
-        <th mat-header-cell *matHeaderCellDef>Batches</th>
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Batches</th>
         <td mat-cell *matCellDef="let row">{{ row.batch_numbers }}</td>
       </ng-container>
 

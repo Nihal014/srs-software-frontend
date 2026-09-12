@@ -80,9 +80,9 @@
     </div>
 
     <div class="bg-white border border-border rounded-md p-4 mb-3">
-      <table mat-table [dataSource]="lines" class="w-full">
+      <table mat-table [dataSource]="lines" class="w-full rounded-md overflow-hidden">
         <ng-container matColumnDef="item">
-          <th mat-header-cell *matHeaderCellDef>Item</th>
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Item</th>
           <td mat-cell *matCellDef="let line">
             @if (isDraft) {
               <mat-form-field appearance="outline" class="dense-field w-full">
@@ -99,12 +99,12 @@
         </ng-container>
 
         <ng-container matColumnDef="unit">
-          <th mat-header-cell *matHeaderCellDef>Unit</th>
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Unit</th>
           <td mat-cell *matCellDef="let line">{{ itemFor(line.itemId)?.unit }}</td>
         </ng-container>
 
         <ng-container matColumnDef="qty">
-          <th mat-header-cell *matHeaderCellDef class="text-right">Qty</th>
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Qty</th>
           <td mat-cell *matCellDef="let line" class="text-right">
             @if (isDraft) {
               <mat-form-field appearance="outline" class="dense-field w-22">
@@ -117,7 +117,7 @@
         </ng-container>
 
         <ng-container matColumnDef="rate">
-          <th mat-header-cell *matHeaderCellDef class="text-right">Rate</th>
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Rate</th>
           <td mat-cell *matCellDef="let line" class="text-right">
             @if (isDraft) {
               <mat-form-field appearance="outline" class="dense-field w-22">
@@ -130,7 +130,7 @@
         </ng-container>
 
         <ng-container matColumnDef="tax">
-          <th mat-header-cell *matHeaderCellDef class="text-right">Tax %</th>
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Tax %</th>
           <td mat-cell *matCellDef="let line" class="text-right">
             @if (isDraft) {
               <mat-form-field appearance="outline" class="dense-field w-22">
@@ -143,7 +143,7 @@
         </ng-container>
 
         <ng-container matColumnDef="discount">
-          <th mat-header-cell *matHeaderCellDef class="text-right">Discount</th>
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Discount</th>
           <td mat-cell *matCellDef="let line" class="text-right">
             @if (isDraft) {
               <mat-form-field appearance="outline" class="dense-field w-22">
@@ -156,12 +156,12 @@
         </ng-container>
 
         <ng-container matColumnDef="total">
-          <th mat-header-cell *matHeaderCellDef class="text-right">Line total</th>
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Line total</th>
           <td mat-cell *matCellDef="let line" class="text-right">{{ lineTotal(line) | number: '1.2-2' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="remove">
-          <th mat-header-cell *matHeaderCellDef></th>
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200"></th>
           <td mat-cell *matCellDef="let line; let i = index">
             @if (isDraft) {
               <button mat-icon-button (click)="removeLine(i)" aria-label="Remove line">&times;</button>
@@ -194,7 +194,11 @@
           <button mat-flat-button color="primary" [disabled]="saving()" (click)="sendForApproval()">Send for approval</button>
         }
         @case (PO_STATUS.PendingApproval) {
-          <button mat-flat-button color="primary" [disabled]="saving()" (click)="approve()">Approve</button>
+          @if (auth.isAdmin()) {
+            <button mat-flat-button color="primary" [disabled]="saving()" (click)="approve()">Approve</button>
+          } @else {
+            <div class="text-xs text-ink-muted self-center">Waiting on Admin approval.</div>
+          }
         }
         @case (PO_STATUS.Approved) {
           <button mat-flat-button color="primary" [disabled]="saving()" (click)="sendToSupplier()">Send to supplier</button>
@@ -214,31 +218,31 @@
     @if (po() && po()!.grns.length) {
       <div class="bg-white border border-border rounded-md p-4 mb-3">
         <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-2">Receipt history &mdash; linked GRNs</div>
-        <table mat-table [dataSource]="po()!.grns" class="w-full">
+        <table mat-table [dataSource]="po()!.grns" class="w-full rounded-md overflow-hidden">
           <ng-container matColumnDef="grn_number">
-            <th mat-header-cell *matHeaderCellDef>GRN</th>
+            <th mat-header-cell *matHeaderCellDef class="bg-gray-200">GRN</th>
             <td mat-cell *matCellDef="let g">
-              <a [routerLink]="['/grn', g.id]" class="text-accent font-mono no-underline hover:underline">{{ g.grn_number }}</a>
+              <a [routerLink]="['/grn', g.id]" class="text-accent font-medium underline">{{ g.grn_number }}</a>
             </td>
           </ng-container>
           <ng-container matColumnDef="received_date">
-            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Date</th>
             <td mat-cell *matCellDef="let g">{{ g.received_date | date: 'd MMM y' }}</td>
           </ng-container>
           <ng-container matColumnDef="qty_received">
-            <th mat-header-cell *matHeaderCellDef class="text-right">Received</th>
+            <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Received</th>
             <td mat-cell *matCellDef="let g" class="text-right">{{ g.qty_received }}</td>
           </ng-container>
           <ng-container matColumnDef="qty_accepted">
-            <th mat-header-cell *matHeaderCellDef class="text-right">Accepted</th>
+            <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Accepted</th>
             <td mat-cell *matCellDef="let g" class="text-right">{{ g.qty_accepted }}</td>
           </ng-container>
           <ng-container matColumnDef="qty_rejected">
-            <th mat-header-cell *matHeaderCellDef class="text-right">Rejected</th>
+            <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Rejected</th>
             <td mat-cell *matCellDef="let g" class="text-right">{{ g.qty_rejected }}</td>
           </ng-container>
           <ng-container matColumnDef="batch_numbers">
-            <th mat-header-cell *matHeaderCellDef>Batches</th>
+            <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Batches</th>
             <td mat-cell *matCellDef="let g">{{ g.batch_numbers }}</td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="grnColumns"></tr>

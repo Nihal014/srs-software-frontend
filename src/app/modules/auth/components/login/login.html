@@ -1,0 +1,37 @@
+<div class="min-h-screen flex items-center justify-center bg-page">
+  <div class="w-full max-w-sm bg-white border border-border rounded-md p-6">
+    <div class="flex items-center gap-2.5 mb-6">
+      <div class="w-8 h-8 rounded-md bg-accent text-white flex items-center justify-center font-bold text-xs">RB</div>
+      <div class="flex flex-col gap-px">
+        <div class="font-semibold text-[15px]">RSR BAKES</div>
+        <div class="text-[10px] tracking-wider uppercase text-ink-muted">Operations &amp; Accounts</div>
+      </div>
+    </div>
+
+    <h1 class="text-lg font-semibold mb-4">Sign in</h1>
+
+    @if (error()) {
+      <div class="text-xs text-red-800 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-3">{{ error() }}</div>
+    }
+
+    <form (ngSubmit)="submit()" class="flex flex-col gap-3">
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" [(ngModel)]="email" name="email" autocomplete="username" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Password</mat-label>
+        <input matInput type="password" [(ngModel)]="password" name="password" autocomplete="current-password" />
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" type="submit" [disabled]="loading()" class="mt-1">
+        {{ loading() ? 'Signing in…' : 'Sign in' }}
+      </button>
+    </form>
+
+    <div class="text-xs text-ink-muted text-center mt-4">
+      New here? <a routerLink="/signup" class="text-accent font-medium">Create an account</a>
+    </div>
+  </div>
+</div>
