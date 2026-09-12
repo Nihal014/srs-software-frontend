@@ -75,8 +75,7 @@ export class PoDetail implements OnInit {
   readonly items = signal<Item[]>([]);
   readonly po = signal<PurchaseOrderDetail | null>(null);
 
-  id: number | null = null;
-  isNew = true;
+  id!: number;
 
   supplierId: number | null = null;
   deliveryLocation = '';
@@ -86,29 +85,16 @@ export class PoDetail implements OnInit {
   lines: EditableLine[] = [];
 
   ngOnInit() {
-    const idParam = this.route.snapshot.paramMap.get('id');
-    this.isNew = !idParam;
-    this.id = idParam ? Number(idParam) : null;
+    this.id = Number(this.route.snapshot.paramMap.get('id'));
 
     this.suppliersService.list().subscribe((s) => this.suppliers.set(s));
     this.itemsService.list().subscribe((i) => this.items.set(i));
-    this.deliveryLocationsService.list().subscribe((locations) => {
-      this.deliveryLocations.set(locations);
-      if (this.isNew && !this.deliveryLocation) {
-        this.deliveryLocation = locations[0]?.name ?? '';
-      }
-    });
+    this.deliveryLocationsService.list().subscribe((locations) => this.deliveryLocations.set(locations));
 
-    if (this.isNew) {
-      this.addLine();
-      this.loading.set(false);
-    } else {
-      this.loadPo();
-    }
+    this.loadPo();
   }
 
   loadPo() {
-    if (!this.id) return;
     this.loading.set(true);
     this.poService.get(this.id).subscribe((po) => {
       this.po.set(po);
@@ -137,7 +123,11 @@ export class PoDetail implements OnInit {
   }
 
   get isDraft() {
-    return this.isNew || this.po()?.status === PO_STATUS.Draft;
+    return this.po()?.status === PO_STATUS.Draft;
+  }
+
+  get supplierName() {
+    return this.suppliers().find((s) => s.id === this.supplierId)?.name ?? '—';
   }
 
   itemFor(itemId: number | null) {
@@ -210,20 +200,17 @@ export class PoDetail implements OnInit {
       return;
     }
     this.saving.set(true);
-    const payload = this.buildPayload();
-    const request = this.isNew ? this.poService.create(payload) : this.poService.update(this.id!, payload);
-    request.subscribe({
+    this.poService.update(this.id, this.buildPayload()).subscribe({
       next: (po) => {
         this.saving.set(false);
         this.snackBar.open(`${po.po_number} saved.`, 'Dismiss', { duration: 2500 });
-        this.router.navigate(['/procurement', po.id]);
+        this.po.set(po);
       },
       error: (err) => this.handleError(err),
     });
   }
 
   sendForApproval() {
-    if (!this.id) return;
     this.saving.set(true);
     this.poService.sendForApproval(this.id).subscribe({
       next: () => {
@@ -236,7 +223,6 @@ export class PoDetail implements OnInit {
   }
 
   approve() {
-    if (!this.id) return;
     this.saving.set(true);
     this.poService.approve(this.id, false).subscribe({
       next: () => {
@@ -247,7 +233,7 @@ export class PoDetail implements OnInit {
       error: (err) => {
         this.saving.set(false);
         if (err.status === 400 && confirm(err.error?.message + '\n\nConfirm second approval?')) {
-          this.poService.approve(this.id!, true).subscribe({
+          this.poService.approve(this.id, true).subscribe({
             next: () => {
               this.snackBar.open('Approved.', 'Dismiss', { duration: 2500 });
               this.loadPo();
@@ -260,7 +246,6 @@ export class PoDetail implements OnInit {
   }
 
   sendToSupplier() {
-    if (!this.id) return;
     this.saving.set(true);
     this.poService.sendToSupplier(this.id).subscribe({
       next: () => {
@@ -273,7 +258,6 @@ export class PoDetail implements OnInit {
   }
 
   closePo() {
-    if (!this.id) return;
     this.saving.set(true);
     this.poService.close(this.id).subscribe({
       next: () => {
@@ -286,7 +270,6 @@ export class PoDetail implements OnInit {
   }
 
   receiveAgainstPo() {
-    if (!this.id) return;
     this.router.navigate(['/grn/new'], { queryParams: { poId: this.id } });
   }
 

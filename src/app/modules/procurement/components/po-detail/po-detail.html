@@ -1,12 +1,12 @@
-<div>
+<div class="p-4">
   <a routerLink="/procurement" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Purchase orders</a>
 
   @if (loading()) {
     <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
   } @else {
     <div class="flex items-center gap-2.5 mb-3">
-      <h1 class="text-xl font-semibold m-0 font-mono">{{ isNew ? 'New purchase order' : po()?.po_number }}</h1>
-      @if (!isNew && po()) {
+      <h1 class="text-xl font-semibold m-0 font-mono">{{ po()?.po_number }}</h1>
+      @if (po()) {
         <mat-chip [class]="'status-chip status-chip--' + statusSlugFor(po()!.status)">
           {{ statusLabelFor(po()!.status) }}
         </mat-chip>
@@ -14,44 +14,69 @@
     </div>
 
     <div class="bg-white border border-border rounded-md p-4 mb-3">
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
-        <mat-form-field appearance="outline">
-          <mat-label>Supplier</mat-label>
-          <mat-select [(ngModel)]="supplierId" [disabled]="!isDraft">
-            @for (s of suppliers(); track s.id) {
-              <mat-option [value]="s.id">{{ s.name }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+      @if (isDraft) {
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
+          <mat-form-field appearance="outline">
+            <mat-label>Supplier</mat-label>
+            <mat-select [(ngModel)]="supplierId">
+              @for (s of suppliers(); track s.id) {
+                <mat-option [value]="s.id">{{ s.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Delivery location</mat-label>
-          <mat-select [(ngModel)]="deliveryLocation" [disabled]="!isDraft">
-            @for (loc of deliveryLocations(); track loc.id) {
-              <mat-option [value]="loc.name">{{ loc.name }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Delivery location</mat-label>
+            <mat-select [(ngModel)]="deliveryLocation">
+              @for (loc of deliveryLocations(); track loc.id) {
+                <mat-option [value]="loc.name">{{ loc.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Expected date</mat-label>
-          <input matInput type="date" [(ngModel)]="expectedDate" [disabled]="!isDraft" />
-        </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Expected date</mat-label>
+            <input matInput type="date" [(ngModel)]="expectedDate" />
+          </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Payment terms</mat-label>
-          <mat-select [(ngModel)]="paymentTermsValue" [disabled]="!isDraft">
-            @for (t of paymentTerms; track t) {
-              <mat-option [value]="t">{{ t }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Payment terms</mat-label>
+            <mat-select [(ngModel)]="paymentTermsValue">
+              @for (t of paymentTerms; track t) {
+                <mat-option [value]="t">{{ t }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
 
-        <mat-form-field appearance="outline" class="col-span-2">
-          <mat-label>Reference / remarks</mat-label>
-          <input matInput [(ngModel)]="remarks" [disabled]="!isDraft" />
-        </mat-form-field>
-      </div>
+          <mat-form-field appearance="outline" class="col-span-2">
+            <mat-label>Reference / remarks</mat-label>
+            <input matInput [(ngModel)]="remarks" />
+          </mat-form-field>
+        </div>
+      } @else {
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
+          <div>
+            <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Supplier</div>
+            <div class="text-sm">{{ supplierName }}</div>
+          </div>
+          <div>
+            <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Delivery location</div>
+            <div class="text-sm">{{ deliveryLocation || '—' }}</div>
+          </div>
+          <div>
+            <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Expected date</div>
+            <div class="text-sm">{{ expectedDate ? (expectedDate | date: 'd MMM y') : '—' }}</div>
+          </div>
+          <div>
+            <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Payment terms</div>
+            <div class="text-sm">{{ paymentTermsValue || '—' }}</div>
+          </div>
+          <div class="col-span-2">
+            <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Reference / remarks</div>
+            <div class="text-sm">{{ remarks || '—' }}</div>
+          </div>
+        </div>
+      }
     </div>
 
     <div class="bg-white border border-border rounded-md p-4 mb-3">
@@ -163,34 +188,30 @@
     </div>
 
     <div class="flex gap-2 mb-4">
-      @if (isNew) {
-        <button mat-flat-button color="primary" [disabled]="saving()" (click)="save()">Create purchase order</button>
-      } @else {
-        @switch (po()?.status) {
-          @case (PO_STATUS.Draft) {
-            <button mat-stroked-button [disabled]="saving()" (click)="save()">Save draft</button>
-            <button mat-flat-button color="primary" [disabled]="saving()" (click)="sendForApproval()">Send for approval</button>
-          }
-          @case (PO_STATUS.PendingApproval) {
-            <button mat-flat-button color="primary" [disabled]="saving()" (click)="approve()">Approve</button>
-          }
-          @case (PO_STATUS.Approved) {
-            <button mat-flat-button color="primary" [disabled]="saving()" (click)="sendToSupplier()">Send to supplier</button>
-          }
-          @case (PO_STATUS.SentToSupplier) {
-            <button mat-flat-button color="primary" [disabled]="saving()" (click)="receiveAgainstPo()">Receive against this PO &rarr;</button>
-          }
-          @case (PO_STATUS.PartiallyReceived) {
-            <button mat-flat-button color="primary" [disabled]="saving()" (click)="receiveAgainstPo()">Receive against this PO &rarr;</button>
-          }
-          @case (PO_STATUS.FullyReceived) {
-            <button mat-flat-button color="primary" [disabled]="saving()" (click)="closePo()">Close PO</button>
-          }
+      @switch (po()?.status) {
+        @case (PO_STATUS.Draft) {
+          <button mat-stroked-button [disabled]="saving()" (click)="save()">Save draft</button>
+          <button mat-flat-button color="primary" [disabled]="saving()" (click)="sendForApproval()">Send for approval</button>
+        }
+        @case (PO_STATUS.PendingApproval) {
+          <button mat-flat-button color="primary" [disabled]="saving()" (click)="approve()">Approve</button>
+        }
+        @case (PO_STATUS.Approved) {
+          <button mat-flat-button color="primary" [disabled]="saving()" (click)="sendToSupplier()">Send to supplier</button>
+        }
+        @case (PO_STATUS.SentToSupplier) {
+          <button mat-flat-button color="primary" [disabled]="saving()" (click)="receiveAgainstPo()">Receive against this PO &rarr;</button>
+        }
+        @case (PO_STATUS.PartiallyReceived) {
+          <button mat-flat-button color="primary" [disabled]="saving()" (click)="receiveAgainstPo()">Receive against this PO &rarr;</button>
+        }
+        @case (PO_STATUS.FullyReceived) {
+          <button mat-flat-button color="primary" [disabled]="saving()" (click)="closePo()">Close PO</button>
         }
       }
     </div>
 
-    @if (!isNew && po() && po()!.grns.length) {
+    @if (po() && po()!.grns.length) {
       <div class="bg-white border border-border rounded-md p-4 mb-3">
         <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-2">Receipt history &mdash; linked GRNs</div>
         <table mat-table [dataSource]="po()!.grns" class="w-full">

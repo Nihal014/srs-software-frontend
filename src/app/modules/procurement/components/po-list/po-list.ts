@@ -4,7 +4,9 @@ import { Router, RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog } from '@angular/material/dialog';
 import { PoService } from '../../po.service';
+import { PoCreateDialog } from '../po-create-dialog/po-create-dialog';
 import {
   PO_STATUS,
   PO_STATUS_LABEL,
@@ -35,6 +37,7 @@ interface StatusFilter {
 export class PoList implements OnInit {
   private poService = inject(PoService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
 
   readonly displayedColumns = [
     'po_number',
@@ -81,6 +84,12 @@ export class PoList implements OnInit {
   }
 
   createNew() {
-    this.router.navigate(['/procurement/new']);
+    const dialogRef = this.dialog.open(PoCreateDialog, {
+      panelClass: ['rb-dialog-container', 'w-[940px]', 'h-[95vh]', 'max-w-[95vw]'],
+      autoFocus: false,
+    });
+    dialogRef.afterClosed().subscribe((po) => {
+      if (po) this.router.navigate(['/procurement', po.id]);
+    });
   }
 }

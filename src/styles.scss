@@ -37,3 +37,18 @@ body {
   height: 100%;
 }
 /* You can add global styles to this file, and also import other style files */
+
+/* ----------------------------------------------------------------------------
+   Dialog — mirrors the embase-finance `.custom-dialog-container` convention:
+   strip the MDC surface's own padding so a dialog's own header/content/actions
+   divs (mat-dialog-title / mat-dialog-content / mat-dialog-actions) control
+   their own spacing instead of fighting Material's defaults.
+   ---------------------------------------------------------------------------- */
+.rb-dialog-container {
+  .mat-mdc-dialog-container .mat-mdc-dialog-surface {
+    padding: 0 !important;
+  }
+  .mat-mdc-dialog-title::before {
+    display: none;
+  }
+}
