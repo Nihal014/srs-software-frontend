@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -17,6 +17,7 @@ import { DeliveryLocationsService } from 'app/shared/services/delivery-locations
 import { AuthService } from 'app/core/services/auth.service';
 import { DateField } from 'app/shared/components/date-field/date-field';
 import { parseDateString, toDateString } from 'app/shared/utils/date.util';
+import { createPoLineGroup, poLineTotal, poTotals, type PoLineGroup } from 'app/shared/forms/po-line.form';
 import type { Supplier } from 'app/shared/models/supplier.model';
 import type { Item } from 'app/shared/models/item.model';
 import type { DeliveryLocation } from 'app/shared/models/delivery-location.model';
@@ -30,20 +31,12 @@ import {
 
 const PAYMENT_TERMS = ['Net 15 days', 'Net 30 days', 'Cash on delivery'];
 
-interface EditableLine {
-  itemId: number | null;
-  qtyOrdered: number;
-  rate: number;
-  taxPercent: number;
-  discount: number;
-}
-
 @Component({
   selector: 'app-po-detail',
   standalone: true,
   imports: [
     RouterLink,
-    FormsModule,
+    ReactiveFormsModule,
     DateField,
     DecimalPipe,
     DatePipe,
@@ -66,6 +59,7 @@ export class PoDetail implements OnInit {
   private itemsService = inject(ItemsService);
   private deliveryLocationsService = inject(DeliveryLocationsService);
   private snackBar = inject(MatSnackBar);
+  private fb = inject(FormBuilder);
   readonly auth = inject(AuthService);
 
   readonly deliveryLocations = signal<DeliveryLocation[]>([]);
@@ -82,12 +76,22 @@ export class PoDetail implements OnInit {
 
   id!: number;
 
-  supplierId: number | null = null;
-  deliveryLocation = '';
-  expectedDate = '';
-  paymentTermsValue = PAYMENT_TERMS[0];
-  remarks = '';
-  lines: EditableLine[] = [];
+  readonly form = this.fb.group({
+    supplierId: this.fb.control<number | null>(null, [Validators.required]),
+    deliveryLocation: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
+    expectedDate: this.fb.nonNullable.control(''),
+    paymentTerms: this.fb.nonNullable.control(PAYMENT_TERMS[0], [Validators.required]),
+    remarks: this.fb.nonNullable.control(''),
+    lines: this.fb.array<PoLineGroup>([], [Validators.minLength(1)]),
+  });
+
+  // mat-table needs a fresh array reference to re-render, so mirror the FormArray
+  // into a signal whenever rows are added or removed.
+  readonly lineGroups = signal<PoLineGroup[]>([]);
+
+  get lines() {
+    return this.form.controls.lines;
+  }
 
   ngOnInit() {
     this.id = Number(this.route.snapshot.paramMap.get('id'));
@@ -103,19 +107,30 @@ export class PoDetail implements OnInit {
     this.loading.set(true);
     this.poService.get(this.id).subscribe((po) => {
       this.po.set(po);
-      this.supplierId = po.supplier_id;
-      this.deliveryLocation = po.delivery_location;
       const expected = parseDateString(po.expected_date);
-      this.expectedDate = expected ? toDateString(expected) : '';
-      this.paymentTermsValue = po.payment_terms;
-      this.remarks = po.remarks ?? '';
-      this.lines = po.lines.map((l) => ({
-        itemId: l.item_id,
-        qtyOrdered: l.qty_ordered,
-        rate: l.rate,
-        taxPercent: l.tax_percent,
-        discount: l.discount,
-      }));
+      this.form.enable({ emitEvent: false });
+      this.form.reset({
+        supplierId: po.supplier_id,
+        deliveryLocation: po.delivery_location,
+        expectedDate: expected ? toDateString(expected) : '',
+        paymentTerms: po.payment_terms,
+        remarks: po.remarks ?? '',
+      });
+      this.lines.clear();
+      po.lines.forEach((l) =>
+        this.lines.push(
+          createPoLineGroup(this.fb, {
+            itemId: l.item_id,
+            qtyOrdered: l.qty_ordered,
+            rate: l.rate,
+            taxPercent: l.tax_percent,
+            discount: l.discount,
+          }),
+        ),
+      );
+      this.syncLines();
+      // Only Draft POs are editable; every later status is read-only.
+      if (po.status !== PO_STATUS.Draft) this.form.disable({ emitEvent: false });
       this.loading.set(false);
     });
   }
@@ -133,76 +148,81 @@ export class PoDetail implements OnInit {
   }
 
   get supplierName() {
-    return this.suppliers().find((s) => s.id === this.supplierId)?.name ?? '—';
+    return this.suppliers().find((s) => s.id === this.form.controls.supplierId.value)?.name ?? '—';
   }
 
   itemFor(itemId: number | null) {
     return this.items().find((i) => i.id === itemId) ?? null;
   }
 
-  onItemChange(line: EditableLine) {
-    const item = this.itemFor(line.itemId);
-    if (item) line.rate = item.rate;
+  onItemChange(line: PoLineGroup) {
+    const item = this.itemFor(line.controls.itemId.value);
+    if (item) line.controls.rate.setValue(item.rate);
   }
 
   addLine() {
     const first = this.items()[0];
-    this.lines.push({
-      itemId: first?.id ?? null,
-      qtyOrdered: 0,
-      rate: first?.rate ?? 0,
-      taxPercent: 5,
-      discount: 0,
-    });
+    this.lines.push(createPoLineGroup(this.fb, { itemId: first?.id ?? null, rate: first?.rate ?? 0, taxPercent: 5 }));
+    this.syncLines();
   }
 
   removeLine(index: number) {
-    this.lines.splice(index, 1);
+    this.lines.removeAt(index);
+    this.syncLines();
   }
 
-  lineTotal(line: EditableLine): number {
-    const gross = (line.qtyOrdered || 0) * (line.rate || 0) - (line.discount || 0);
-    return gross + (gross * (line.taxPercent || 0)) / 100;
+  private syncLines() {
+    this.lineGroups.set([...this.lines.controls]);
+  }
+
+  lineTotal(line: PoLineGroup): number {
+    return poLineTotal(line.getRawValue());
+  }
+
+  get totals() {
+    return poTotals(this.lines.getRawValue());
   }
 
   get subtotal() {
-    return this.lines.reduce((a, l) => a + (l.qtyOrdered || 0) * (l.rate || 0), 0);
+    return this.totals.subtotal;
   }
 
   get totalDiscount() {
-    return this.lines.reduce((a, l) => a + (l.discount || 0), 0);
+    return this.totals.totalDiscount;
   }
 
   get totalTax() {
-    return this.lines.reduce((a, l) => a + (this.lineTotal(l) - (l.qtyOrdered || 0) * (l.rate || 0) + (l.discount || 0)), 0);
+    return this.totals.totalTax;
   }
 
   get grandTotal() {
-    return this.lines.reduce((a, l) => a + this.lineTotal(l), 0);
+    return this.totals.grandTotal;
   }
 
   private buildPayload() {
+    const value = this.form.getRawValue();
     return {
-      supplierId: this.supplierId!,
-      deliveryLocation: this.deliveryLocation,
-      expectedDate: this.expectedDate || undefined,
-      paymentTerms: this.paymentTermsValue,
-      remarks: this.remarks || undefined,
-      lines: this.lines
-        .filter((l) => l.itemId)
-        .map((l) => ({
-          itemId: l.itemId!,
-          qtyOrdered: l.qtyOrdered,
-          rate: l.rate,
-          taxPercent: l.taxPercent,
-          discount: l.discount,
-        })),
+      supplierId: value.supplierId!,
+      deliveryLocation: value.deliveryLocation,
+      expectedDate: value.expectedDate || undefined,
+      paymentTerms: value.paymentTerms,
+      remarks: value.remarks || undefined,
+      lines: value.lines.map((l) => ({
+        itemId: l.itemId!,
+        qtyOrdered: l.qtyOrdered!,
+        rate: l.rate!,
+        taxPercent: l.taxPercent!,
+        discount: l.discount!,
+      })),
     };
   }
 
   save() {
-    if (!this.supplierId) {
-      this.snackBar.open('Pick a supplier first.', 'Dismiss', { duration: 3000 });
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      if (!this.lines.length) {
+        this.snackBar.open('Add at least one line.', 'Dismiss', { duration: 3000 });
+      }
       return;
     }
     this.saving.set(true);

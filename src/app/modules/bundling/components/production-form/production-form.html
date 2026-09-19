@@ -2,37 +2,42 @@
   <a routerLink="/bundling" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Bundling / Production</a>
   <h1 class="text-xl font-semibold mb-4">New production run</h1>
 
-  <div class="bg-white border border-border rounded-md p-4 mb-3">
+  <div class="bg-white border border-border rounded-md p-4 mb-3" [formGroup]="form">
     <div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
       <mat-form-field appearance="outline">
         <mat-label>Product</mat-label>
-        <mat-select [(ngModel)]="bundleProductId" (ngModelChange)="onBundleChange()">
+        <mat-select formControlName="bundleProductId">
           @for (b of bundles(); track b.id) {
             <mat-option [value]="b.id">{{ b.name }}</mat-option>
           }
         </mat-select>
+        <mat-error>Choose a product</mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Quantity to produce</mat-label>
-        <input matInput type="number" [(ngModel)]="qtyProduced" (ngModelChange)="onQtyChange()" />
+        <input matInput type="number" formControlName="qtyProduced" />
+        <mat-error>Enter a quantity greater than 0</mat-error>
       </mat-form-field>
 
-      <app-date-field label="Production date" [(ngModel)]="producedDate" />
+      <app-date-field label="Production date" formControlName="producedDate" />
 
       <mat-form-field appearance="outline">
         <mat-label>Labor cost per unit (Rs)</mat-label>
-        <input matInput type="number" [(ngModel)]="laborCostPerUnit" />
+        <input matInput type="number" formControlName="laborCostPerUnit" />
+        <mat-error>Enter 0 or more</mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Overhead cost per unit (Rs)</mat-label>
-        <input matInput type="number" [(ngModel)]="overheadCostPerUnit" />
+        <input matInput type="number" formControlName="overheadCostPerUnit" />
+        <mat-error>Enter 0 or more</mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Selling price per unit (Rs)</mat-label>
-        <input matInput type="number" [(ngModel)]="sellingPrice" />
+        <input matInput type="number" formControlName="sellingPrice" />
+        <mat-error>Enter 0 or more</mat-error>
       </mat-form-field>
     </div>
 
@@ -80,7 +85,7 @@
         </ul>
         @if (auth.isAdmin()) {
           <label class="flex items-center gap-2 mt-2">
-            <input type="checkbox" [(ngModel)]="override" />
+            <input type="checkbox" formControlName="override" />
             Produce anyway (Admin override — allows negative stock)
           </label>
         }
@@ -89,7 +94,7 @@
 
     <div class="flex gap-2 mt-4">
       <button mat-stroked-button routerLink="/bundling">Cancel</button>
-      <button mat-flat-button color="primary" [disabled]="saving() || (hasShortage && !override)" (click)="submit()">
+      <button mat-flat-button color="primary" [disabled]="saving() || form.invalid || (hasShortage && !form.controls.override.value)" (click)="submit()">
         {{ saving() ? 'Recording…' : 'Record production' }}
       </button>
     </div>

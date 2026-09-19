@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,12 +14,13 @@ const PAYMENT_TERMS = ['Net 15 days', 'Net 30 days', 'Cash on delivery'];
 @Component({
   selector: 'app-suppliers-master',
   standalone: true,
-  imports: [FormsModule, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [ReactiveFormsModule, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
   templateUrl: './suppliers-master.html',
 })
 export class SuppliersMaster implements OnInit {
   private suppliersService = inject(SuppliersService);
   private snackBar = inject(MatSnackBar);
+  private fb = inject(FormBuilder);
 
   readonly paymentTermsOptions = PAYMENT_TERMS;
   readonly columns = ['name', 'contact_person', 'phone', 'gstin', 'payment_terms', 'status', 'edit', 'delete'];
@@ -28,13 +29,15 @@ export class SuppliersMaster implements OnInit {
   readonly editing = signal<Supplier | 'new' | null>(null);
   readonly saving = signal(false);
 
-  name = '';
-  contactPerson = '';
-  phone = '';
-  email = '';
-  gstin = '';
-  paymentTerms = PAYMENT_TERMS[0];
-  isActive = true;
+  readonly form = this.fb.nonNullable.group({
+    name: ['', [Validators.required, Validators.minLength(2)]],
+    contactPerson: '',
+    phone: '',
+    email: ['', [Validators.email]],
+    gstin: '',
+    paymentTerms: [PAYMENT_TERMS[0], [Validators.required]],
+    isActive: true,
+  });
 
   ngOnInit() {
     this.load();
@@ -50,24 +53,28 @@ export class SuppliersMaster implements OnInit {
 
   startCreate() {
     this.editing.set('new');
-    this.name = '';
-    this.contactPerson = '';
-    this.phone = '';
-    this.email = '';
-    this.gstin = '';
-    this.paymentTerms = PAYMENT_TERMS[0];
-    this.isActive = true;
+    this.form.reset({
+      name: '',
+      contactPerson: '',
+      phone: '',
+      email: '',
+      gstin: '',
+      paymentTerms: PAYMENT_TERMS[0],
+      isActive: true,
+    });
   }
 
   startEdit(supplier: Supplier) {
     this.editing.set(supplier);
-    this.name = supplier.name;
-    this.contactPerson = supplier.contact_person ?? '';
-    this.phone = supplier.phone ?? '';
-    this.email = supplier.email ?? '';
-    this.gstin = supplier.gstin ?? '';
-    this.paymentTerms = supplier.payment_terms;
-    this.isActive = supplier.is_active;
+    this.form.reset({
+      name: supplier.name,
+      contactPerson: supplier.contact_person ?? '',
+      phone: supplier.phone ?? '',
+      email: supplier.email ?? '',
+      gstin: supplier.gstin ?? '',
+      paymentTerms: supplier.payment_terms,
+      isActive: !!supplier.is_active,
+    });
   }
 
   cancel() {
@@ -75,19 +82,20 @@ export class SuppliersMaster implements OnInit {
   }
 
   save() {
-    if (!this.name.trim()) {
-      this.snackBar.open('Supplier name is required.', 'Dismiss', { duration: 3000 });
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
       return;
     }
     const editing = this.editing();
+    const value = this.form.getRawValue();
     const payload: UpsertSupplierPayload = {
-      name: this.name.trim(),
-      contactPerson: this.contactPerson.trim() || undefined,
-      phone: this.phone.trim() || undefined,
-      email: this.email.trim() || undefined,
-      gstin: this.gstin.trim() || undefined,
-      paymentTerms: this.paymentTerms,
-      isActive: this.isActive,
+      name: value.name.trim(),
+      contactPerson: value.contactPerson.trim() || undefined,
+      phone: value.phone.trim() || undefined,
+      email: value.email.trim() || undefined,
+      gstin: value.gstin.trim() || undefined,
+      paymentTerms: value.paymentTerms,
+      isActive: value.isActive,
     };
 
     this.saving.set(true);

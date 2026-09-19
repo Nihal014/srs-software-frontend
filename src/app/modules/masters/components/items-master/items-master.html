@@ -7,19 +7,29 @@
   </div>
 
   @if (editing()) {
-    <div class="bg-white border border-border rounded-md p-4 mb-3">
+    <div class="bg-white border border-border rounded-md p-4 mb-3" [formGroup]="form">
       <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3">
         <mat-form-field appearance="outline">
           <mat-label>Code</mat-label>
-          <input matInput [(ngModel)]="code" />
+          <input matInput formControlName="code" />
+          @if (form.controls.code.hasError('required')) {
+            <mat-error>Code is required</mat-error>
+          } @else if (form.controls.code.hasError('minlength')) {
+            <mat-error>At least 2 characters</mat-error>
+          }
         </mat-form-field>
         <mat-form-field appearance="outline" class="col-span-2">
           <mat-label>Name</mat-label>
-          <input matInput [(ngModel)]="name" />
+          <input matInput formControlName="name" />
+          @if (form.controls.name.hasError('required')) {
+            <mat-error>Name is required</mat-error>
+          } @else if (form.controls.name.hasError('minlength')) {
+            <mat-error>At least 2 characters</mat-error>
+          }
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Unit</mat-label>
-          <mat-select [(ngModel)]="unit">
+          <mat-select formControlName="unit">
             @for (u of units; track u) {
               <mat-option [value]="u">{{ u }}</mat-option>
             }
@@ -28,23 +38,25 @@
         @if (editing() === 'new') {
           <mat-form-field appearance="outline">
             <mat-label>Opening rate (Rs)</mat-label>
-            <input matInput type="number" [(ngModel)]="rate" />
+            <input matInput type="number" formControlName="rate" />
+            <mat-error>Enter 0 or more</mat-error>
           </mat-form-field>
         }
         <mat-form-field appearance="outline">
           <mat-label>Reorder level</mat-label>
-          <input matInput type="number" [(ngModel)]="reorderLevel" />
+          <input matInput type="number" formControlName="reorderLevel" />
+          <mat-error>Enter 0 or more</mat-error>
         </mat-form-field>
       </div>
       @if (editing() !== 'new') {
         <label class="flex items-center gap-2 mt-2 text-sm">
-          <input type="checkbox" [(ngModel)]="isActive" />
+          <input type="checkbox" formControlName="isActive" />
           Active
         </label>
       }
       <div class="flex gap-2 mt-3">
         <button mat-stroked-button (click)="cancel()">Cancel</button>
-        <button mat-flat-button color="primary" [disabled]="saving()" (click)="save()">Save</button>
+        <button mat-flat-button color="primary" [disabled]="saving() || form.invalid" (click)="save()">Save</button>
       </div>
     </div>
   }

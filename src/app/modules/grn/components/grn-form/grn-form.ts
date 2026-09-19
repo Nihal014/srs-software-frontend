@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, type AbstractControl, type ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -12,31 +12,55 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { GrnService } from '../../grn.service';
 import { DateField } from 'app/shared/components/date-field/date-field';
-import type { GrnContext, GrnDetail } from 'app/shared/models/grn.model';
+import type { GrnContext, GrnContextLine, GrnDetail } from 'app/shared/models/grn.model';
 import { PO_STATUS_LABEL, type PoStatus } from 'app/shared/models/purchase-order.model';
 
-interface EditableGrnLine {
-  purchaseOrderLineId: number;
-  itemName: string;
-  unit: string;
-  ordered: number;
-  priorReceived: number;
-  outstanding: number;
-  qtyReceived: number;
-  qtyAccepted: number;
-  qtyRejected: number;
-  rejectionReason: string;
-  mfgDate: string;
-  expiryDate: string;
-  error: string | null;
+/** Cross-field rules for one GRN line: within outstanding, accepted + rejected = received, reason when rejecting. */
+function grnLineValidator(group: AbstractControl): ValidationErrors | null {
+  const v = group.value;
+  const received = v.qtyReceived ?? 0;
+  const accepted = v.qtyAccepted ?? 0;
+  const rejected = v.qtyRejected ?? 0;
+  if (received > v.outstanding) {
+    return { lineError: `Received ${received} exceeds outstanding ${v.outstanding}.` };
+  }
+  if (accepted + rejected !== received) {
+    return { lineError: `Accepted + rejected (${accepted + rejected}) must equal received (${received}).` };
+  }
+  if (rejected > 0 && !String(v.rejectionReason ?? '').trim()) {
+    return { lineError: 'A rejection reason is required.' };
+  }
+  return null;
 }
+
+function createGrnLineGroup(fb: FormBuilder, l: GrnContextLine) {
+  return fb.nonNullable.group(
+    {
+      purchaseOrderLineId: l.purchase_order_line_id,
+      itemName: l.item_name,
+      unit: l.unit,
+      ordered: l.qty_ordered,
+      priorReceived: l.prior_received,
+      outstanding: l.outstanding,
+      qtyReceived: [l.suggested.qtyReceived, [Validators.required, Validators.min(0)]],
+      qtyAccepted: [l.suggested.qtyAccepted, [Validators.required, Validators.min(0)]],
+      qtyRejected: [l.suggested.qtyRejected, [Validators.required, Validators.min(0)]],
+      rejectionReason: '',
+      mfgDate: [l.suggested.mfgDate, [Validators.required]],
+      expiryDate: [l.suggested.expiryDate, [Validators.required]],
+    },
+    { validators: [grnLineValidator] },
+  );
+}
+
+type GrnLineGroup = ReturnType<typeof createGrnLineGroup>;
 
 @Component({
   selector: 'app-grn-form',
   standalone: true,
   imports: [
     RouterLink,
-    FormsModule,
+    ReactiveFormsModule,
     DateField,
     DecimalPipe,
     DatePipe,
@@ -56,6 +80,7 @@ export class GrnForm implements OnInit {
   private router = inject(Router);
   private grnService = inject(GrnService);
   private snackBar = inject(MatSnackBar);
+  private fb = inject(FormBuilder);
 
   readonly lineColumns = [
     'item',
@@ -81,7 +106,12 @@ export class GrnForm implements OnInit {
   readonly detail = signal<GrnDetail | null>(null);
 
   poId: number | null = null;
-  lines: EditableGrnLine[] = [];
+
+  readonly form = this.fb.group({ lines: this.fb.array<GrnLineGroup>([]) });
+
+  get lines() {
+    return this.form.controls.lines;
+  }
 
   ngOnInit() {
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -103,22 +133,7 @@ export class GrnForm implements OnInit {
     this.grnService.newContext(this.poId).subscribe({
       next: (ctx) => {
         this.context.set(ctx);
-        this.lines = ctx.lines.map((l) => ({
-          purchaseOrderLineId: l.purchase_order_line_id,
-          itemName: l.item_name,
-          unit: l.unit,
-          ordered: l.qty_ordered,
-          priorReceived: l.prior_received,
-          outstanding: l.outstanding,
-          qtyReceived: l.suggested.qtyReceived,
-          qtyAccepted: l.suggested.qtyAccepted,
-          qtyRejected: l.suggested.qtyRejected,
-          rejectionReason: '',
-          mfgDate: l.suggested.mfgDate,
-          expiryDate: l.suggested.expiryDate,
-          error: null,
-        }));
-        this.validateLines();
+        ctx.lines.forEach((l) => this.lines.push(createGrnLineGroup(this.fb, l)));
         this.loading.set(false);
       },
       error: (err) => {
@@ -130,28 +145,12 @@ export class GrnForm implements OnInit {
     });
   }
 
-  validateLines() {
-    let anyError = false;
-    for (const l of this.lines) {
-      l.error = null;
-      if (l.qtyReceived > l.outstanding) {
-        l.error = `Received ${l.qtyReceived} exceeds outstanding ${l.outstanding}.`;
-      } else if (l.qtyAccepted + l.qtyRejected !== l.qtyReceived) {
-        l.error = `Accepted + rejected (${l.qtyAccepted + l.qtyRejected}) must equal received (${l.qtyReceived}).`;
-      } else if (l.qtyRejected > 0 && !l.rejectionReason.trim()) {
-        l.error = 'A rejection reason is required.';
-      }
-      if (l.error) anyError = true;
-    }
-    return anyError;
-  }
-
-  get hasErrors() {
-    return this.lines.some((l) => l.error);
+  lineError(group: AbstractControl): string | null {
+    return group.errors?.['lineError'] ?? null;
   }
 
   get totals() {
-    return this.lines.reduce(
+    return this.lines.getRawValue().reduce(
       (a, l) => ({
         received: a.received + (l.qtyReceived || 0),
         accepted: a.accepted + (l.qtyAccepted || 0),
@@ -163,12 +162,12 @@ export class GrnForm implements OnInit {
 
   post() {
     if (!this.poId) return;
-    this.validateLines();
-    if (this.hasErrors) {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
       this.snackBar.open('Fix the highlighted lines before posting.', 'Dismiss', { duration: 3000 });
       return;
     }
-    const linesToPost = this.lines.filter((l) => l.qtyReceived > 0);
+    const linesToPost = this.lines.getRawValue().filter((l) => l.qtyReceived > 0);
     if (!linesToPost.length) {
       this.snackBar.open('Enter a received quantity on at least one line.', 'Dismiss', { duration: 3000 });
       return;

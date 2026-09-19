@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,12 +14,13 @@ const UNITS = ['kg', 'pcs', 'g', 'l', 'ml'];
 @Component({
   selector: 'app-items-master',
   standalone: true,
-  imports: [FormsModule, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [ReactiveFormsModule, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
   templateUrl: './items-master.html',
 })
 export class ItemsMaster implements OnInit {
   private itemsService = inject(ItemsService);
   private snackBar = inject(MatSnackBar);
+  private fb = inject(FormBuilder);
 
   readonly units = UNITS;
   readonly columns = ['code', 'name', 'unit', 'rate', 'reorder_level', 'status', 'edit', 'delete'];
@@ -28,12 +29,14 @@ export class ItemsMaster implements OnInit {
   readonly editing = signal<Item | 'new' | null>(null);
   readonly saving = signal(false);
 
-  code = '';
-  name = '';
-  unit = UNITS[0];
-  rate = 0;
-  reorderLevel = 0;
-  isActive = true;
+  readonly form = this.fb.nonNullable.group({
+    code: ['', [Validators.required, Validators.minLength(2)]],
+    name: ['', [Validators.required, Validators.minLength(2)]],
+    unit: [UNITS[0], [Validators.required]],
+    rate: [0, [Validators.required, Validators.min(0)]],
+    reorderLevel: [0, [Validators.required, Validators.min(0)]],
+    isActive: true,
+  });
 
   ngOnInit() {
     this.load();
@@ -49,22 +52,19 @@ export class ItemsMaster implements OnInit {
 
   startCreate() {
     this.editing.set('new');
-    this.code = '';
-    this.name = '';
-    this.unit = UNITS[0];
-    this.rate = 0;
-    this.reorderLevel = 0;
-    this.isActive = true;
+    this.form.reset({ code: '', name: '', unit: UNITS[0], rate: 0, reorderLevel: 0, isActive: true });
   }
 
   startEdit(item: Item) {
     this.editing.set(item);
-    this.code = item.code;
-    this.name = item.name;
-    this.unit = item.unit;
-    this.rate = item.rate;
-    this.reorderLevel = item.reorder_level;
-    this.isActive = item.is_active;
+    this.form.reset({
+      code: item.code,
+      name: item.name,
+      unit: item.unit,
+      rate: item.rate,
+      reorderLevel: item.reorder_level,
+      isActive: !!item.is_active,
+    });
   }
 
   cancel() {
@@ -72,19 +72,20 @@ export class ItemsMaster implements OnInit {
   }
 
   save() {
-    if (!this.code.trim() || !this.name.trim()) {
-      this.snackBar.open('Code and name are required.', 'Dismiss', { duration: 3000 });
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
       return;
     }
     const editing = this.editing();
+    const value = this.form.getRawValue();
     const payload: UpsertItemPayload = {
-      code: this.code.trim(),
-      name: this.name.trim(),
-      unit: this.unit,
-      reorderLevel: this.reorderLevel,
-      isActive: this.isActive,
+      code: value.code.trim(),
+      name: value.name.trim(),
+      unit: value.unit,
+      reorderLevel: value.reorderLevel,
+      isActive: value.isActive,
     };
-    if (editing === 'new') payload.rate = this.rate;
+    if (editing === 'new') payload.rate = value.rate;
 
     this.saving.set(true);
     const request = editing === 'new' ? this.itemsService.create(payload) : this.itemsService.update(editing!.id, payload);

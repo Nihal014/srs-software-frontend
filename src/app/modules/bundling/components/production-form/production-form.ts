@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -18,7 +18,7 @@ import type { BundleProduct, RequirementLine } from 'app/shared/models/bundle.mo
   selector: 'app-production-form',
   standalone: true,
   imports: [
-    FormsModule,
+    ReactiveFormsModule,
     DateField,
     RouterLink,
     MatFormFieldModule,
@@ -34,6 +34,7 @@ export class ProductionForm implements OnInit {
   private productionsService = inject(BundleProductionsService);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
+  private fb = inject(FormBuilder);
   readonly auth = inject(AuthService);
 
   readonly bundles = signal<BundleProduct[]>([]);
@@ -42,13 +43,15 @@ export class ProductionForm implements OnInit {
   readonly saving = signal(false);
   readonly shortageError = signal<RequirementLine[] | null>(null);
 
-  bundleProductId: number | null = null;
-  qtyProduced: number | null = null;
-  producedDate = toDateString(new Date());
-  laborCostPerUnit = 0;
-  overheadCostPerUnit = 0;
-  sellingPrice: number | null = null;
-  override = false;
+  readonly form = this.fb.group({
+    bundleProductId: this.fb.control<number | null>(null, [Validators.required]),
+    qtyProduced: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.001)]),
+    producedDate: this.fb.nonNullable.control(toDateString(new Date()), [Validators.required]),
+    laborCostPerUnit: this.fb.nonNullable.control(0, [Validators.required, Validators.min(0)]),
+    overheadCostPerUnit: this.fb.nonNullable.control(0, [Validators.required, Validators.min(0)]),
+    sellingPrice: this.fb.control<number | null>(null, [Validators.min(0)]),
+    override: this.fb.nonNullable.control(false),
+  });
 
   private requirementTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -58,31 +61,32 @@ export class ProductionForm implements OnInit {
 
   ngOnInit() {
     this.bundleProductsService.list().subscribe((bundles) => this.bundles.set(bundles));
+    this.form.controls.bundleProductId.valueChanges.subscribe(() => this.onBundleChange());
+    this.form.controls.qtyProduced.valueChanges.subscribe(() => this.onQtyChange());
   }
 
-  onBundleChange() {
-    const bundle = this.bundles().find((b) => b.id === this.bundleProductId);
-    this.sellingPrice = bundle?.selling_price ?? null;
-    this.override = false;
-    this.shortageError.set(null);
-    this.scheduleRequirementCheck();
+  private onBundleChange() {
+    const bundle = this.bundles().find((b) => b.id === this.form.controls.bundleProductId.value);
+    this.form.controls.sellingPrice.setValue(bundle?.selling_price ?? null);
+    this.onQtyChange();
   }
 
-  onQtyChange() {
-    this.override = false;
+  private onQtyChange() {
+    this.form.controls.override.setValue(false);
     this.shortageError.set(null);
     this.scheduleRequirementCheck();
   }
 
   private scheduleRequirementCheck() {
     if (this.requirementTimer) clearTimeout(this.requirementTimer);
-    if (!this.bundleProductId || !this.qtyProduced || this.qtyProduced <= 0) {
+    const { bundleProductId, qtyProduced } = this.form.getRawValue();
+    if (!bundleProductId || !qtyProduced || qtyProduced <= 0) {
       this.requirement.set([]);
       return;
     }
     this.requirementTimer = setTimeout(() => {
       this.checkingRequirement.set(true);
-      this.productionsService.checkRequirement(this.bundleProductId!, this.qtyProduced!).subscribe({
+      this.productionsService.checkRequirement(bundleProductId, qtyProduced).subscribe({
         next: (lines) => {
           this.requirement.set(lines);
           this.checkingRequirement.set(false);
@@ -93,21 +97,22 @@ export class ProductionForm implements OnInit {
   }
 
   submit() {
-    if (!this.bundleProductId || !this.qtyProduced || this.qtyProduced <= 0) {
-      this.snackBar.open('Choose a product and a quantity to produce.', 'Dismiss', { duration: 3000 });
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
       return;
     }
+    const value = this.form.getRawValue();
     this.saving.set(true);
     this.shortageError.set(null);
     this.productionsService
       .create({
-        bundleProductId: this.bundleProductId,
-        qtyProduced: this.qtyProduced,
-        producedDate: this.producedDate,
-        laborCostPerUnit: this.laborCostPerUnit,
-        overheadCostPerUnit: this.overheadCostPerUnit,
-        sellingPrice: this.sellingPrice ?? undefined,
-        override: this.override,
+        bundleProductId: value.bundleProductId!,
+        qtyProduced: value.qtyProduced!,
+        producedDate: value.producedDate,
+        laborCostPerUnit: value.laborCostPerUnit,
+        overheadCostPerUnit: value.overheadCostPerUnit,
+        sellingPrice: value.sellingPrice ?? undefined,
+        override: value.override,
       })
       .subscribe({
         next: (production) => {

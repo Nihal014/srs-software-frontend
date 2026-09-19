@@ -7,31 +7,37 @@
   </div>
 
   @if (editing()) {
-    <div class="bg-white border border-border rounded-md p-4 mb-3">
+    <div class="bg-white border border-border rounded-md p-4 mb-3" [formGroup]="form">
       <div class="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
         <mat-form-field appearance="outline" class="col-span-2">
           <mat-label>Supplier name</mat-label>
-          <input matInput [(ngModel)]="name" />
+          <input matInput formControlName="name" />
+          @if (form.controls.name.hasError('required')) {
+            <mat-error>Supplier name is required</mat-error>
+          } @else if (form.controls.name.hasError('minlength')) {
+            <mat-error>At least 2 characters</mat-error>
+          }
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Contact person</mat-label>
-          <input matInput [(ngModel)]="contactPerson" />
+          <input matInput formControlName="contactPerson" />
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Phone</mat-label>
-          <input matInput [(ngModel)]="phone" />
+          <input matInput formControlName="phone" />
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Email</mat-label>
-          <input matInput [(ngModel)]="email" />
+          <input matInput formControlName="email" />
+          <mat-error>Enter a valid email</mat-error>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>GSTIN</mat-label>
-          <input matInput [(ngModel)]="gstin" />
+          <input matInput formControlName="gstin" />
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Payment terms</mat-label>
-          <mat-select [(ngModel)]="paymentTerms">
+          <mat-select formControlName="paymentTerms">
             @for (t of paymentTermsOptions; track t) {
               <mat-option [value]="t">{{ t }}</mat-option>
             }
@@ -40,13 +46,13 @@
       </div>
       @if (editing() !== 'new') {
         <label class="flex items-center gap-2 mt-2 text-sm">
-          <input type="checkbox" [(ngModel)]="isActive" />
+          <input type="checkbox" formControlName="isActive" />
           Active
         </label>
       }
       <div class="flex gap-2 mt-3">
         <button mat-stroked-button (click)="cancel()">Cancel</button>
-        <button mat-flat-button color="primary" [disabled]="saving()" (click)="save()">Save</button>
+        <button mat-flat-button color="primary" [disabled]="saving() || form.invalid" (click)="save()">Save</button>
       </div>
     </div>
   }

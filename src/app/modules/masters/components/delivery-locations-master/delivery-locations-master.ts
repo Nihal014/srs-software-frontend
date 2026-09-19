@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,12 +11,13 @@ import type { DeliveryLocation, UpsertDeliveryLocationPayload } from 'app/shared
 @Component({
   selector: 'app-delivery-locations-master',
   standalone: true,
-  imports: [FormsModule, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [ReactiveFormsModule, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule],
   templateUrl: './delivery-locations-master.html',
 })
 export class DeliveryLocationsMaster implements OnInit {
   private deliveryLocationsService = inject(DeliveryLocationsService);
   private snackBar = inject(MatSnackBar);
+  private fb = inject(FormBuilder);
 
   readonly columns = ['name', 'status', 'edit', 'delete'];
   readonly locations = signal<DeliveryLocation[]>([]);
@@ -24,8 +25,10 @@ export class DeliveryLocationsMaster implements OnInit {
   readonly editing = signal<DeliveryLocation | 'new' | null>(null);
   readonly saving = signal(false);
 
-  name = '';
-  isActive = true;
+  readonly form = this.fb.nonNullable.group({
+    name: ['', [Validators.required, Validators.minLength(2)]],
+    isActive: true,
+  });
 
   ngOnInit() {
     this.load();
@@ -41,14 +44,12 @@ export class DeliveryLocationsMaster implements OnInit {
 
   startCreate() {
     this.editing.set('new');
-    this.name = '';
-    this.isActive = true;
+    this.form.reset({ name: '', isActive: true });
   }
 
   startEdit(location: DeliveryLocation) {
     this.editing.set(location);
-    this.name = location.name;
-    this.isActive = location.is_active;
+    this.form.reset({ name: location.name, isActive: !!location.is_active });
   }
 
   cancel() {
@@ -56,12 +57,13 @@ export class DeliveryLocationsMaster implements OnInit {
   }
 
   save() {
-    if (!this.name.trim()) {
-      this.snackBar.open('Location name is required.', 'Dismiss', { duration: 3000 });
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
       return;
     }
     const editing = this.editing();
-    const payload: UpsertDeliveryLocationPayload = { name: this.name.trim(), isActive: this.isActive };
+    const { name, isActive } = this.form.getRawValue();
+    const payload: UpsertDeliveryLocationPayload = { name: name.trim(), isActive };
 
     this.saving.set(true);
     const request = editing === 'new'

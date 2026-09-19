@@ -5,31 +5,33 @@
   </div>
 </div>
 
-<div mat-dialog-content class="!max-h-[70vh] px-5 pt-4">
+<div mat-dialog-content class="!max-h-[70vh] px-5 pt-4" [formGroup]="form">
   <div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
     <mat-form-field appearance="outline">
       <mat-label>Supplier</mat-label>
-      <mat-select [(ngModel)]="supplierId">
+      <mat-select formControlName="supplierId">
         @for (s of suppliers(); track s.id) {
           <mat-option [value]="s.id">{{ s.name }}</mat-option>
         }
       </mat-select>
+      <mat-error>Pick a supplier</mat-error>
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>Delivery location</mat-label>
-      <mat-select [(ngModel)]="deliveryLocation">
+      <mat-select formControlName="deliveryLocation">
         @for (loc of deliveryLocations(); track loc.id) {
           <mat-option [value]="loc.name">{{ loc.name }}</mat-option>
         }
       </mat-select>
+      <mat-error>Pick a delivery location</mat-error>
     </mat-form-field>
 
-    <app-date-field label="Expected date" [(ngModel)]="expectedDate" />
+    <app-date-field label="Expected date" formControlName="expectedDate" />
 
     <mat-form-field appearance="outline">
       <mat-label>Payment terms</mat-label>
-      <mat-select [(ngModel)]="paymentTermsValue">
+      <mat-select formControlName="paymentTerms">
         @for (t of paymentTerms; track t) {
           <mat-option [value]="t">{{ t }}</mat-option>
         }
@@ -38,17 +40,17 @@
 
     <mat-form-field appearance="outline" class="col-span-2">
       <mat-label>Reference / remarks</mat-label>
-      <input matInput [(ngModel)]="remarks" />
+      <input matInput formControlName="remarks" />
     </mat-form-field>
   </div>
 
   <div class="mt-2 overflow-x-auto">
-    <table mat-table [dataSource]="lines" class="w-full min-w-[720px] rounded-md overflow-hidden">
+    <table mat-table [dataSource]="lineGroups()" class="w-full min-w-[720px] rounded-md overflow-hidden">
       <ng-container matColumnDef="item">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Item</th>
-        <td mat-cell *matCellDef="let line">
+        <td mat-cell *matCellDef="let line" [formGroup]="line">
           <mat-form-field appearance="outline" class="dense-field w-full">
-            <mat-select [(ngModel)]="line.itemId" (ngModelChange)="onItemChange(line)">
+            <mat-select formControlName="itemId" (selectionChange)="onItemChange(line)">
               @for (i of items(); track i.id) {
                 <mat-option [value]="i.id">{{ i.name }}</mat-option>
               }
@@ -59,41 +61,41 @@
 
       <ng-container matColumnDef="unit">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Unit</th>
-        <td mat-cell *matCellDef="let line">{{ itemFor(line.itemId)?.unit }}</td>
+        <td mat-cell *matCellDef="let line">{{ itemFor(line.controls.itemId.value)?.unit }}</td>
       </ng-container>
 
       <ng-container matColumnDef="qty">
         <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Qty</th>
-        <td mat-cell *matCellDef="let line" class="text-right">
+        <td mat-cell *matCellDef="let line" class="text-right" [formGroup]="line">
           <mat-form-field appearance="outline" class="dense-field w-20">
-            <input matInput type="number" [(ngModel)]="line.qtyOrdered" />
+            <input matInput type="number" formControlName="qtyOrdered" />
           </mat-form-field>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="rate">
         <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Rate</th>
-        <td mat-cell *matCellDef="let line" class="text-right">
+        <td mat-cell *matCellDef="let line" class="text-right" [formGroup]="line">
           <mat-form-field appearance="outline" class="dense-field w-20">
-            <input matInput type="number" [(ngModel)]="line.rate" />
+            <input matInput type="number" formControlName="rate" />
           </mat-form-field>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="tax">
         <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Tax %</th>
-        <td mat-cell *matCellDef="let line" class="text-right">
+        <td mat-cell *matCellDef="let line" class="text-right" [formGroup]="line">
           <mat-form-field appearance="outline" class="dense-field w-20">
-            <input matInput type="number" [(ngModel)]="line.taxPercent" />
+            <input matInput type="number" formControlName="taxPercent" />
           </mat-form-field>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="discount">
         <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Discount</th>
-        <td mat-cell *matCellDef="let line" class="text-right">
+        <td mat-cell *matCellDef="let line" class="text-right" [formGroup]="line">
           <mat-form-field appearance="outline" class="dense-field w-20">
-            <input matInput type="number" [(ngModel)]="line.discount" />
+            <input matInput type="number" formControlName="discount" />
           </mat-form-field>
         </td>
       </ng-container>
@@ -130,6 +132,6 @@
 <div mat-dialog-actions class="flex justify-end mt-auto gap-2 px-5 pb-4 pt-4">
   <button mat-stroked-button (click)="close()" [disabled]="saving()"
   class="bg-white text-black">Cancel</button>
-  <button mat-flat-button  [disabled]="saving()" (click)="create()"
+  <button mat-flat-button  [disabled]="saving() || form.invalid" (click)="create()"
   class="bg-blue-800 shadow-xl">Create purchase order</button>
 </div>

@@ -1,45 +1,49 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, type AbstractControl, type ValidationErrors } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthService } from 'app/core/services/auth.service';
 
+function matchesPassword(control: AbstractControl): ValidationErrors | null {
+  return control.value === control.parent?.get('password')?.value ? null : { mismatch: true };
+}
+
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, RouterLink],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, RouterLink],
   templateUrl: './signup.html',
 })
 export class Signup {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private fb = inject(FormBuilder);
 
-  name = '';
-  email = '';
-  password = '';
-  confirmPassword = '';
+  readonly form = this.fb.nonNullable.group({
+    name: ['', [Validators.required, Validators.minLength(2)]],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    confirmPassword: ['', [Validators.required, matchesPassword]],
+  });
   readonly loading = signal(false);
   readonly error = signal('');
   readonly submitted = signal(false);
 
+  constructor() {
+    this.form.controls.password.valueChanges.subscribe(() => this.form.controls.confirmPassword.updateValueAndValidity());
+  }
+
   submit() {
-    if (!this.name.trim() || !this.email.trim() || !this.password) {
-      this.error.set('Fill in your name, email and password.');
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
       return;
     }
-    if (this.password.length < 8) {
-      this.error.set('Password must be at least 8 characters.');
-      return;
-    }
-    if (this.password !== this.confirmPassword) {
-      this.error.set('Passwords do not match.');
-      return;
-    }
+    const { name, email, password } = this.form.getRawValue();
     this.loading.set(true);
     this.error.set('');
-    this.authService.signup(this.name.trim(), this.email.trim(), this.password).subscribe({
+    this.authService.signup(name.trim(), email.trim(), password).subscribe({
       next: () => {
         this.loading.set(false);
         this.submitted.set(true);

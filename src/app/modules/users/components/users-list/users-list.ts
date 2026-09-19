@@ -1,5 +1,4 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
@@ -18,7 +17,7 @@ import {
 @Component({
   selector: 'app-users-list',
   standalone: true,
-  imports: [FormsModule, MatTableModule, MatButtonModule, MatSelectModule],
+  imports: [MatTableModule, MatButtonModule, MatSelectModule],
   templateUrl: './users-list.html',
 })
 export class UsersList implements OnInit {
