@@ -1,0 +1,105 @@
+<div class="p-4">
+  <a routerLink="/bundling" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Bundling / Production</a>
+
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else if (production(); as p) {
+    <div class="flex items-center gap-2.5 mb-3">
+      <h1 class="text-xl font-semibold m-0 font-mono">{{ p.production_number }}</h1>
+      @if (p.shortage_override) {
+        <span class="status-chip status-chip--rejected inline-flex items-center rounded-2xl px-2.5 py-0.5 text-md shadow-md font-medium whitespace-nowrap">
+          Shortage override used
+        </span>
+      }
+    </div>
+
+    <div class="bg-white border border-border rounded-md p-4 mb-3">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
+        <div>
+          <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Product</div>
+          <div class="text-sm">{{ p.bundle_name }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Date</div>
+          <div class="text-sm">{{ p.produced_date | date: 'd MMM y' }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Qty produced</div>
+          <div class="text-sm">{{ p.qty_produced }} {{ p.output_unit }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Material cost (total)</div>
+          <div class="text-sm">Rs {{ p.material_cost | number: '1.2-2' }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Labor / unit</div>
+          <div class="text-sm">Rs {{ p.labor_cost_per_unit | number: '1.2-2' }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Overhead / unit</div>
+          <div class="text-sm">Rs {{ p.overhead_cost_per_unit | number: '1.2-2' }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Unit cost</div>
+          <div class="text-sm font-semibold">Rs {{ p.unit_cost | number: '1.2-2' }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Selling price</div>
+          <div class="text-sm">Rs {{ p.selling_price | number: '1.2-2' }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Margin / unit</div>
+          <div class="text-sm" [class.text-red-700]="p.selling_price < p.unit_cost">
+            Rs {{ p.selling_price - p.unit_cost | number: '1.2-2' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white border border-border rounded-md p-4 mb-3">
+      <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-2">
+        Traceability — ingredients &amp; batches consumed
+      </div>
+      <table mat-table [dataSource]="p.consumptions" class="w-full rounded-md overflow-hidden">
+        <ng-container matColumnDef="item_name">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Item</th>
+          <td mat-cell *matCellDef="let row">{{ row.item_name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="qty_consumed">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Qty used</th>
+          <td mat-cell *matCellDef="let row" class="text-right">{{ row.qty_consumed }}</td>
+        </ng-container>
+        <ng-container matColumnDef="rate_at_time">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Rate (Rs)</th>
+          <td mat-cell *matCellDef="let row" class="text-right">{{ row.rate_at_time | number: '1.2-2' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="cost">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Cost (Rs)</th>
+          <td mat-cell *matCellDef="let row" class="text-right">{{ row.cost | number: '1.2-2' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="batch_number">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Batch</th>
+          <td mat-cell *matCellDef="let row" class="font-mono">{{ row.batch_number }}</td>
+        </ng-container>
+        <ng-container matColumnDef="grn_number">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">GRN</th>
+          <td mat-cell *matCellDef="let row">
+            <a [routerLink]="['/grn', row.grn_id]" class="text-accent font-mono no-underline hover:underline">{{ row.grn_number }}</a>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="po_number">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">PO</th>
+          <td mat-cell *matCellDef="let row">
+            <a [routerLink]="['/procurement', row.purchase_order_id]" class="text-accent font-mono no-underline hover:underline">{{ row.po_number }}</a>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="supplier_name">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Supplier</th>
+          <td mat-cell *matCellDef="let row">{{ row.supplier_name }}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="consumptionColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: consumptionColumns"></tr>
+      </table>
+    </div>
+  }
+</div>

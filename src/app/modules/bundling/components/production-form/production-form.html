@@ -1,0 +1,97 @@
+<div class="p-4 max-w-3xl">
+  <a routerLink="/bundling" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Bundling / Production</a>
+  <h1 class="text-xl font-semibold mb-4">New production run</h1>
+
+  <div class="bg-white border border-border rounded-md p-4 mb-3">
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
+      <mat-form-field appearance="outline">
+        <mat-label>Product</mat-label>
+        <mat-select [(ngModel)]="bundleProductId" (ngModelChange)="onBundleChange()">
+          @for (b of bundles(); track b.id) {
+            <mat-option [value]="b.id">{{ b.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Quantity to produce</mat-label>
+        <input matInput type="number" [(ngModel)]="qtyProduced" (ngModelChange)="onQtyChange()" />
+      </mat-form-field>
+
+      <app-date-field label="Production date" [(ngModel)]="producedDate" />
+
+      <mat-form-field appearance="outline">
+        <mat-label>Labor cost per unit (Rs)</mat-label>
+        <input matInput type="number" [(ngModel)]="laborCostPerUnit" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Overhead cost per unit (Rs)</mat-label>
+        <input matInput type="number" [(ngModel)]="overheadCostPerUnit" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Selling price per unit (Rs)</mat-label>
+        <input matInput type="number" [(ngModel)]="sellingPrice" />
+      </mat-form-field>
+    </div>
+
+    @if (checkingRequirement()) {
+      <div class="flex justify-center py-4"><mat-spinner diameter="24" /></div>
+    } @else if (requirement().length) {
+      <div class="text-xs font-semibold uppercase tracking-wide text-ink-faint mt-4 mb-2">
+        Ingredients required
+      </div>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-200 text-left">
+            <th class="px-2 py-1.5">Item</th>
+            <th class="px-2 py-1.5 text-right">Required</th>
+            <th class="px-2 py-1.5 text-right">Available</th>
+            <th class="px-2 py-1.5 text-right">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of requirement(); track line.itemId) {
+            <tr class="border-b border-border">
+              <td class="px-2 py-1.5">{{ line.itemName }}</td>
+              <td class="px-2 py-1.5 text-right">{{ line.required }} {{ line.unit }}</td>
+              <td class="px-2 py-1.5 text-right">{{ line.available }} {{ line.unit }}</td>
+              <td class="px-2 py-1.5 text-right">
+                @if (line.shortage > 0) {
+                  <span class="text-red-700 font-medium">Short by {{ line.shortage }} {{ line.unit }}</span>
+                } @else {
+                  <span class="text-green-700">OK</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+
+    @if (shortageError(); as shortages) {
+      <div class="bg-red-50 border border-red-200 rounded-md px-3 py-2.5 mt-4 text-sm text-red-800">
+        <div class="font-medium mb-1">Not enough stock to produce this quantity:</div>
+        <ul class="list-disc pl-5">
+          @for (s of shortages; track s.itemId) {
+            <li>{{ s.itemName }}: short by {{ s.shortage }} {{ s.unit }}</li>
+          }
+        </ul>
+        @if (auth.isAdmin()) {
+          <label class="flex items-center gap-2 mt-2">
+            <input type="checkbox" [(ngModel)]="override" />
+            Produce anyway (Admin override — allows negative stock)
+          </label>
+        }
+      </div>
+    }
+
+    <div class="flex gap-2 mt-4">
+      <button mat-stroked-button routerLink="/bundling">Cancel</button>
+      <button mat-flat-button color="primary" [disabled]="saving() || (hasShortage && !override)" (click)="submit()">
+        {{ saving() ? 'Recording…' : 'Record production' }}
+      </button>
+    </div>
+  </div>
+</div>

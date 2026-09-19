@@ -1,0 +1,53 @@
+<div class="p-4">
+  <div class="flex justify-between items-center mb-4">
+    <h1 class="text-xl font-semibold m-0">Bundling / Production</h1>
+    <button mat-flat-button color="primary" [routerLink]="['new']" class="shadow-md bg-blue-800">
+      New production run
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else {
+    <table mat-table [dataSource]="rows()" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="production_number">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Production #</th>
+        <td mat-cell *matCellDef="let row" class="font-mono">{{ row.production_number }}</td>
+      </ng-container>
+      <ng-container matColumnDef="bundle_name">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Product</th>
+        <td mat-cell *matCellDef="let row">{{ row.bundle_name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="produced_date">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Date</th>
+        <td mat-cell *matCellDef="let row">{{ row.produced_date | date: 'd MMM y' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="qty_produced">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Qty produced</th>
+        <td mat-cell *matCellDef="let row" class="text-right">{{ row.qty_produced }}</td>
+      </ng-container>
+      <ng-container matColumnDef="unit_cost">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Unit cost (Rs)</th>
+        <td mat-cell *matCellDef="let row" class="text-right">{{ row.unit_cost | number: '1.2-2' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="selling_price">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Selling price (Rs)</th>
+        <td mat-cell *matCellDef="let row" class="text-right">{{ row.selling_price | number: '1.2-2' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="action">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Action</th>
+        <td mat-cell *matCellDef="let row">
+          <button mat-button [routerLink]="[row.id]">View</button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+
+    @if (!rows().length) {
+      <div class="py-11 px-5 text-center text-ink-muted bg-white rounded-md mt-2">
+        No production runs yet. Start the first one.
+      </div>
+    }
+  }
+</div>

@@ -13,6 +13,7 @@ import { PoService } from '../../po.service';
 import { SuppliersService } from 'app/shared/services/suppliers.service';
 import { ItemsService } from 'app/shared/services/items.service';
 import { DeliveryLocationsService } from 'app/shared/services/delivery-locations.service';
+import { DateField } from 'app/shared/components/date-field/date-field';
 import type { Supplier } from 'app/shared/models/supplier.model';
 import type { Item } from 'app/shared/models/item.model';
 import type { DeliveryLocation } from 'app/shared/models/delivery-location.model';
@@ -33,6 +34,7 @@ interface EditableLine {
   standalone: true,
   imports: [
     FormsModule,
+    DateField,
     DecimalPipe,
     MatDialogModule,
     MatFormFieldModule,

@@ -42,6 +42,8 @@ export class Shell {
   private readonly allNavItems: NavItem[] = [
     { label: 'Purchase Orders', path: '/procurement' },
     { label: 'Goods Receipt (GRN)', path: '/grn' },
+    { label: 'Inventory', path: '/inventory' },
+    { label: 'Bundling', path: '/bundling' },
     { label: 'Masters', path: '/masters' },
     { label: 'Users', path: '/users', adminOnly: true },
   ];

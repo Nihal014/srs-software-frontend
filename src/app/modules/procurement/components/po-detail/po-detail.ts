@@ -15,6 +15,8 @@ import { SuppliersService } from 'app/shared/services/suppliers.service';
 import { ItemsService } from 'app/shared/services/items.service';
 import { DeliveryLocationsService } from 'app/shared/services/delivery-locations.service';
 import { AuthService } from 'app/core/services/auth.service';
+import { DateField } from 'app/shared/components/date-field/date-field';
+import { parseDateString, toDateString } from 'app/shared/utils/date.util';
 import type { Supplier } from 'app/shared/models/supplier.model';
 import type { Item } from 'app/shared/models/item.model';
 import type { DeliveryLocation } from 'app/shared/models/delivery-location.model';
@@ -42,6 +44,7 @@ interface EditableLine {
   imports: [
     RouterLink,
     FormsModule,
+    DateField,
     DecimalPipe,
     DatePipe,
     MatFormFieldModule,
@@ -102,7 +105,8 @@ export class PoDetail implements OnInit {
       this.po.set(po);
       this.supplierId = po.supplier_id;
       this.deliveryLocation = po.delivery_location;
-      this.expectedDate = po.expected_date ? po.expected_date.slice(0, 10) : '';
+      const expected = parseDateString(po.expected_date);
+      this.expectedDate = expected ? toDateString(expected) : '';
       this.paymentTermsValue = po.payment_terms;
       this.remarks = po.remarks ?? '';
       this.lines = po.lines.map((l) => ({

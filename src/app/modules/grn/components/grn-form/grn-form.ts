@@ -6,9 +6,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { GrnService } from '../../grn.service';
+import { DateField } from 'app/shared/components/date-field/date-field';
 import type { GrnContext, GrnDetail } from 'app/shared/models/grn.model';
 import { PO_STATUS_LABEL, type PoStatus } from 'app/shared/models/purchase-order.model';
 
@@ -34,12 +37,15 @@ interface EditableGrnLine {
   imports: [
     RouterLink,
     FormsModule,
+    DateField,
     DecimalPipe,
     DatePipe,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatTableModule,
+    MatIconModule,
+    MatTooltipModule,
     MatProgressSpinnerModule,
   ],
   templateUrl: './grn-form.html',

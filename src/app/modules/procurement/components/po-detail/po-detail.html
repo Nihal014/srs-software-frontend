@@ -34,10 +34,7 @@
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Expected date</mat-label>
-            <input matInput type="date" [(ngModel)]="expectedDate" />
-          </mat-form-field>
+          <app-date-field label="Expected date" [(ngModel)]="expectedDate" />
 
           <mat-form-field appearance="outline">
             <mat-label>Payment terms</mat-label>

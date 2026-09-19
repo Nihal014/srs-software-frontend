@@ -58,7 +58,7 @@
     <div class="text-xs text-ink-muted mb-3">{{ context()!.po.supplier_name }} &middot; PO status: {{ statusLabelFor(context()!.po.status) }}</div>
 
     <div class="bg-white border border-border rounded-md p-4 mb-3 overflow-x-auto">
-      <table mat-table [dataSource]="lines" class="w-full min-w-[1000px] rounded-md overflow-hidden">
+      <table mat-table [dataSource]="lines" class="w-full min-w-[1100px] rounded-md overflow-hidden">
         <ng-container matColumnDef="item">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Item</th>
           <td mat-cell *matCellDef="let l">{{ l.itemName }} ({{ l.unit }})</td>
@@ -113,19 +113,26 @@
           </td>
         </ng-container>
         <ng-container matColumnDef="mfg">
-          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Mfg date</th>
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">
+            <span class="inline-flex items-center gap-1">
+              Mfg date
+              <mat-icon
+                class="text-amber-700"
+                matTooltip="Mfg date is the manufacturing date: when the item was produced or packed, usually printed on the supplier's packaging (not the date you received it). Both dates are pre-filled with defaults, so check them against the actual packaging before posting. They become the batch's expiry record and drive the Inventory expiry warnings and the soonest-expiry-first order used in Bundling."
+                matTooltipClass="max-w-xs"
+                aria-label="What is Mfg date?"
+                >info</mat-icon
+              >
+            </span>
+          </th>
           <td mat-cell *matCellDef="let l">
-            <mat-form-field appearance="outline" class="dense-field w-33">
-              <input matInput type="date" [(ngModel)]="l.mfgDate" />
-            </mat-form-field>
+            <app-date-field class="w-44" [(ngModel)]="l.mfgDate" />
           </td>
         </ng-container>
         <ng-container matColumnDef="exp">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Expiry date</th>
           <td mat-cell *matCellDef="let l">
-            <mat-form-field appearance="outline" class="dense-field w-33">
-              <input matInput type="date" [(ngModel)]="l.expiryDate" />
-            </mat-form-field>
+            <app-date-field class="w-44" [(ngModel)]="l.expiryDate" />
           </td>
         </ng-container>
 
