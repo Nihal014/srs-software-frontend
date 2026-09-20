@@ -15,12 +15,12 @@ import type { Item } from 'app/shared/models/item.model';
 const UNITS = ['kg', 'pcs', 'g', 'l', 'ml'];
 
 @Component({
-  selector: 'app-bundle-recipes-master',
+  selector: 'app-bundle-recipes',
   standalone: true,
   imports: [ReactiveFormsModule, DecimalPipe, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
-  templateUrl: './bundle-recipes-master.html',
+  templateUrl: './bundle-recipes.html',
 })
-export class BundleRecipesMaster implements OnInit {
+export class BundleRecipes implements OnInit {
   private bundleProductsService = inject(BundleProductsService);
   private itemsService = inject(ItemsService);
   private snackBar = inject(MatSnackBar);

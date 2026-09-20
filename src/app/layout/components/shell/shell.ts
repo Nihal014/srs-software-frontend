@@ -43,8 +43,9 @@ export class Shell {
     { label: 'Purchase Orders', path: '/procurement' },
     { label: 'Goods Receipt (GRN)', path: '/grn' },
     { label: 'Inventory', path: '/inventory' },
+    { label: 'Bundle Recipes', path: '/bundle-recipes' },
     { label: 'Bundling', path: '/bundling' },
-    { label: 'Masters', path: '/masters' },
+    { label: 'Master Data', path: '/masters' },
     { label: 'Users', path: '/users', adminOnly: true },
   ];
 

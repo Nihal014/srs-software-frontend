@@ -16,6 +16,7 @@ export const routes: Routes = [
       { path: 'procurement', loadChildren: () => import('./modules/procurement/procurement.routes') },
       { path: 'grn', loadChildren: () => import('./modules/grn/grn.routes') },
       { path: 'inventory', loadChildren: () => import('./modules/inventory/inventory.routes') },
+      { path: 'bundle-recipes', loadChildren: () => import('./modules/bundle-recipes/bundle-recipes.routes') },
       { path: 'bundling', loadChildren: () => import('./modules/bundling/bundling.routes') },
       { path: 'masters', loadChildren: () => import('./modules/masters/masters.routes') },
       { path: 'users', loadChildren: () => import('./modules/users/users.routes') },
