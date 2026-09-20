@@ -1,0 +1,60 @@
+<div>
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+    <div class="text-sm">Amount earned by each person on each day of the month.</div>
+    <div class="flex items-center gap-1">
+      <button mat-icon-button (click)="shift(-1)" aria-label="Previous month"><mat-icon>chevron_left</mat-icon></button>
+      <div class="w-40 text-center font-medium">{{ monthLabel() }}</div>
+      <button mat-icon-button (click)="shift(1)" aria-label="Next month"><mat-icon>chevron_right</mat-icon></button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else if (sheet(); as s) {
+    <div class="overflow-x-auto rounded-md border border-border bg-white">
+      <table class="w-full border-collapse text-[12.5px]">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="sticky left-0 z-10 bg-gray-200 px-3 py-2 text-left">Staff</th>
+            @for (d of days(); track d) {
+              <th class="px-2 py-2 text-right font-medium">{{ d }}</th>
+            }
+            <th class="px-3 py-2 text-right">Total (Rs)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of s.staff; track row.staffId) {
+            <tr class="border-t border-border">
+              <td class="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-1.5 font-medium">{{ row.name }}</td>
+              @for (d of days(); track d) {
+                <td class="px-2 py-1.5 text-right">
+                  @if (row.amounts[d]; as amount) {
+                    {{ amount | number: '1.0-2' }}
+                  }
+                </td>
+              }
+              <td class="px-3 py-1.5 text-right font-semibold">{{ row.total | number: '1.2-2' }}</td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr class="border-t-2 border-border bg-gray-100 font-semibold">
+            <td class="sticky left-0 z-10 bg-gray-100 px-3 py-2">Total</td>
+            @for (d of days(); track d) {
+              <td class="px-2 py-2 text-right">
+                @if (s.dayTotals[d]; as total) {
+                  {{ total | number: '1.0-2' }}
+                }
+              </td>
+            }
+            <td class="px-3 py-2 text-right">{{ s.grandTotal | number: '1.2-2' }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    @if (!s.staff.length) {
+      <div class="py-11 px-5 text-center text-ink-muted bg-white rounded-md mt-2">No staff yet.</div>
+    }
+  }
+</div>

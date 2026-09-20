@@ -1,0 +1,77 @@
+<div [formGroup]="form">
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+    <div class="text-sm">Tick who worked and enter hours. Pay is worked out from each person's rate.</div>
+    <app-date-field class="w-52" label="Date" formControlName="date" />
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else {
+    <table mat-table [dataSource]="lineGroups()" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="staff">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Staff</th>
+        <td mat-cell *matCellDef="let line">{{ line.controls.name.value }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="rate">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Rate</th>
+        <td mat-cell *matCellDef="let line">
+          Rs {{ line.controls.payRate.value | number: '1.2-2' }} / {{ line.controls.payType.value === PAY_TYPE.Hourly ? 'hour' : 'day' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="present">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Worked</th>
+        <td mat-cell *matCellDef="let line" [formGroup]="line">
+          <input type="checkbox" formControlName="present" class="h-4 w-4" [attr.aria-label]="'Worked: ' + line.controls.name.value" />
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="hours">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Hours</th>
+        <td mat-cell *matCellDef="let line" class="text-right" [formGroup]="line">
+          @if (line.controls.payType.value === PAY_TYPE.Hourly) {
+            <mat-form-field appearance="outline" class="dense-field w-24">
+              <input matInput type="number" step="0.05" formControlName="hours" />
+            </mat-form-field>
+          } @else {
+            <span class="text-ink-muted">—</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="amount">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Amount (Rs)</th>
+        <td mat-cell *matCellDef="let line" class="text-right" [formGroup]="line">
+          <mat-form-field appearance="outline" class="dense-field w-28">
+            <input matInput type="number" step="0.01" formControlName="amount" />
+          </mat-form-field>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns" [class.bg-red-50]="row.touched && lineError(row)"></tr>
+    </table>
+
+    @for (line of lines.controls; track line) {
+      @if (line.touched && lineError(line); as error) {
+        <div class="text-xs text-red-800 mt-1.5">{{ line.controls.name.value }}: {{ error }}</div>
+      }
+    }
+
+    @if (!lines.length) {
+      <div class="py-11 px-5 text-center text-ink-muted bg-white rounded-md mt-2">
+        No staff yet. Add people in the Staff menu first.
+      </div>
+    } @else {
+      <div class="mt-4 flex items-center gap-4">
+        <div class="text-sm font-mono">
+          {{ totals.staffCount }} worked &middot; Total Rs {{ totals.total | number: '1.2-2' }}
+        </div>
+        <button mat-flat-button color="primary" [disabled]="saving()" (click)="save()">
+          {{ saving() ? 'Saving…' : 'Save day' }}
+        </button>
+      </div>
+    }
+  }
+</div>

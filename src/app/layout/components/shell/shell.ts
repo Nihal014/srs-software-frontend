@@ -45,6 +45,9 @@ export class Shell {
     { label: 'Inventory', path: '/inventory' },
     { label: 'Bundle Recipes', path: '/bundle-recipes' },
     { label: 'Bundling', path: '/bundling' },
+    { label: 'Staff', path: '/staff', adminOnly: true },
+    { label: 'Payroll', path: '/payroll', adminOnly: true },
+    { label: 'Accounts', path: '/accounts', adminOnly: true },
     { label: 'Master Data', path: '/masters' },
     { label: 'Users', path: '/users', adminOnly: true },
   ];

@@ -1,0 +1,99 @@
+<div>
+  <div class="text-sm mb-3">
+    Revenue is sales plus the ready-products stock value. Direct costs give the gross margin; other expenses give the net margin. Capital spending (assets, factory setup) is shown but kept out of profit.
+  </div>
+
+  <div class="bg-white border border-border rounded-md p-3 mb-3" [formGroup]="filter">
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3 items-start max-w-xl">
+      <app-date-field label="From" formControlName="from" />
+      <app-date-field label="To" formControlName="to" />
+    </div>
+    <div class="flex gap-2 mt-3">
+      <button mat-flat-button color="primary" (click)="load()">Apply</button>
+      <button mat-stroked-button (click)="clear()">Clear</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else if (report(); as r) {
+    <div class="rounded-md border border-border bg-white max-w-3xl overflow-hidden">
+      <table class="w-full border-collapse text-[13.5px]">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="px-4 py-2 text-left">Particulars</th>
+            <th class="px-4 py-2 text-right">Amount (Rs)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-t border-border">
+            <td class="px-4 py-1.5">Sales</td>
+            <td class="px-4 py-1.5 text-right">{{ r.sales | number: '1.2-2' }}</td>
+          </tr>
+          <tr class="border-t border-border">
+            <td class="px-4 py-1.5">Ready products (stock value)</td>
+            <td class="px-4 py-1.5 text-right">{{ r.readyProducts.amount | number: '1.2-2' }}</td>
+          </tr>
+          <tr class="border-t border-border bg-gray-50 font-semibold">
+            <td class="px-4 py-2">Revenue</td>
+            <td class="px-4 py-2 text-right">{{ r.revenue | number: '1.2-2' }}</td>
+          </tr>
+
+          <tr class="bg-gray-100"><td colspan="2" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">Direct costs</td></tr>
+          @for (l of r.directCosts.lines; track l.categoryId) {
+            <tr class="border-t border-border">
+              <td class="px-4 py-1.5 pl-8">{{ l.name }}</td>
+              <td class="px-4 py-1.5 text-right">{{ l.total | number: '1.2-2' }}</td>
+            </tr>
+          }
+          <tr class="border-t border-border bg-gray-50 font-semibold">
+            <td class="px-4 py-2">Total direct costs</td>
+            <td class="px-4 py-2 text-right">{{ r.directCosts.total | number: '1.2-2' }}</td>
+          </tr>
+          <tr class="border-t border-border bg-blue-50 font-semibold">
+            <td class="px-4 py-2">
+              Gross margin
+              @if (r.grossMarginPct !== null) {
+                <span class="ml-2 font-normal text-ink-muted">({{ r.grossMarginPct | percent: '1.1-2' }} of sales)</span>
+              }
+            </td>
+            <td class="px-4 py-2 text-right">{{ r.grossMargin | number: '1.2-2' }}</td>
+          </tr>
+
+          <tr class="bg-gray-100"><td colspan="2" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">Other expenses</td></tr>
+          @for (l of r.otherExpenses.lines; track l.categoryId) {
+            <tr class="border-t border-border">
+              <td class="px-4 py-1.5 pl-8">{{ l.name }}</td>
+              <td class="px-4 py-1.5 text-right">{{ l.total | number: '1.2-2' }}</td>
+            </tr>
+          }
+          <tr class="border-t border-border bg-gray-50 font-semibold">
+            <td class="px-4 py-2">Total other expenses</td>
+            <td class="px-4 py-2 text-right">{{ r.otherExpenses.total | number: '1.2-2' }}</td>
+          </tr>
+          <tr class="border-t border-border bg-green-50 font-semibold">
+            <td class="px-4 py-2">
+              Net margin
+              @if (r.netMarginPct !== null) {
+                <span class="ml-2 font-normal text-ink-muted">({{ r.netMarginPct | percent: '1.1-2' }} of sales)</span>
+              }
+            </td>
+            <td class="px-4 py-2 text-right">{{ r.netMargin | number: '1.2-2' }}</td>
+          </tr>
+
+          <tr class="bg-gray-100"><td colspan="2" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">Capital spending (not in profit)</td></tr>
+          @for (l of r.capital.lines; track l.categoryId) {
+            <tr class="border-t border-border">
+              <td class="px-4 py-1.5 pl-8">{{ l.name }}</td>
+              <td class="px-4 py-1.5 text-right">{{ l.total | number: '1.2-2' }}</td>
+            </tr>
+          }
+          <tr class="border-t border-border bg-gray-50 font-semibold">
+            <td class="px-4 py-2">Total capital</td>
+            <td class="px-4 py-2 text-right">{{ r.capital.total | number: '1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

@@ -10,6 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { BundleProductsService } from 'app/shared/services/bundle-products.service';
 import { BundleProductionsService } from 'app/shared/services/bundle-productions.service';
 import { AuthService } from 'app/core/services/auth.service';
+import { PayrollService } from 'app/shared/services/payroll.service';
 import { DateField } from 'app/shared/components/date-field/date-field';
 import { toDateString } from 'app/shared/utils/date.util';
 import type { BundleProduct, RequirementLine } from 'app/shared/models/bundle.model';
@@ -35,6 +36,7 @@ export class ProductionForm implements OnInit {
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+  private payrollService = inject(PayrollService);
   readonly auth = inject(AuthService);
 
   readonly bundles = signal<BundleProduct[]>([]);
@@ -42,6 +44,7 @@ export class ProductionForm implements OnInit {
   readonly checkingRequirement = signal(false);
   readonly saving = signal(false);
   readonly shortageError = signal<RequirementLine[] | null>(null);
+  readonly payrollHint = signal('');
 
   readonly form = this.fb.group({
     bundleProductId: this.fb.control<number | null>(null, [Validators.required]),
@@ -63,6 +66,28 @@ export class ProductionForm implements OnInit {
     this.bundleProductsService.list().subscribe((bundles) => this.bundles.set(bundles));
     this.form.controls.bundleProductId.valueChanges.subscribe(() => this.onBundleChange());
     this.form.controls.qtyProduced.valueChanges.subscribe(() => this.onQtyChange());
+  }
+
+  /** Admin shortcut: that day's total wages spread over the units being produced. */
+  useLaborFromPayroll() {
+    const { producedDate, qtyProduced } = this.form.getRawValue();
+    if (!qtyProduced || qtyProduced <= 0) {
+      this.snackBar.open('Enter the quantity to produce first.', 'Dismiss', { duration: 3000 });
+      return;
+    }
+    this.payrollService.getDayTotal(producedDate).subscribe({
+      next: (day) => {
+        if (!day.staffCount) {
+          this.payrollHint.set('No payroll entries for this date.');
+          return;
+        }
+        this.form.controls.laborCostPerUnit.setValue(Math.round((day.total / qtyProduced) * 100) / 100);
+        this.payrollHint.set(
+          `Rs ${day.total.toFixed(2)} paid to ${day.staffCount} staff on this date, divided by ${qtyProduced} units. If several products were made that day, adjust it.`,
+        );
+      },
+      error: (err) => this.snackBar.open(err.error?.message ?? 'Could not read payroll.', 'Dismiss', { duration: 4000 }),
+    });
   }
 
   private onBundleChange() {

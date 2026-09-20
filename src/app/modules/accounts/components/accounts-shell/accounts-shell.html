@@ -1,0 +1,27 @@
+<div class="p-4">
+  <!-- matTabContent renders a tab only while it is open, so every tab reloads fresh
+       after entries are added in another one. -->
+  <mat-tab-group animationDuration="0ms">
+    <mat-tab label="Summary">
+      <ng-template matTabContent><div class="pt-4"><app-accounts-summary /></div></ng-template>
+    </mat-tab>
+    <mat-tab label="Expenses">
+      <ng-template matTabContent><div class="pt-4"><app-expenses-tab /></div></ng-template>
+    </mat-tab>
+    <mat-tab label="Receipts">
+      <ng-template matTabContent><div class="pt-4"><app-receipts-tab /></div></ng-template>
+    </mat-tab>
+    <mat-tab label="Sales">
+      <ng-template matTabContent><div class="pt-4"><app-sales-tab /></div></ng-template>
+    </mat-tab>
+    <mat-tab label="Cash Book">
+      <ng-template matTabContent><div class="pt-4"><app-cash-book /></div></ng-template>
+    </mat-tab>
+    <mat-tab label="Profit &amp; Loss">
+      <ng-template matTabContent><div class="pt-4"><app-profit-loss /></div></ng-template>
+    </mat-tab>
+    <mat-tab label="Setup">
+      <ng-template matTabContent><div class="pt-4"><app-accounts-setup /></div></ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</div>

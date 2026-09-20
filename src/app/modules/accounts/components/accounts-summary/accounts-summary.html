@@ -1,0 +1,92 @@
+<div>
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else if (summary(); as s) {
+    <div class="text-sm mb-3">Position as of {{ s.asOf }}.</div>
+
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 mb-4">
+      <div class="bg-white border border-border rounded-md p-4">
+        <div class="text-xs text-ink-muted">Company total</div>
+        <div class="text-xl font-semibold">Rs {{ s.companyTotal | number: '1.2-2' }}</div>
+        <div class="text-xs text-ink-muted mt-1">Bank + cash + ready products + amount due from customers</div>
+      </div>
+      <div class="bg-white border border-border rounded-md p-4">
+        <div class="text-xs text-ink-muted">Total sales</div>
+        <div class="text-xl font-semibold">Rs {{ s.totalSales | number: '1.2-2' }}</div>
+      </div>
+      <div class="bg-white border border-border rounded-md p-4">
+        <div class="text-xs text-ink-muted">Gross profit</div>
+        <div class="text-xl font-semibold">Rs {{ s.grossProfit | number: '1.2-2' }}</div>
+        @if (s.grossProfitPct !== null) {
+          <div class="text-xs text-ink-muted mt-1">{{ s.grossProfitPct | percent: '1.1-2' }} of sales</div>
+        }
+      </div>
+      <div class="bg-white border border-border rounded-md p-4">
+        <div class="text-xs text-ink-muted">Net profit</div>
+        <div class="text-xl font-semibold">Rs {{ s.netProfit | number: '1.2-2' }}</div>
+        @if (s.netProfitPct !== null) {
+          <div class="text-xs text-ink-muted mt-1">{{ s.netProfitPct | percent: '1.1-2' }} of sales</div>
+        }
+      </div>
+      <div class="bg-white border border-border rounded-md p-4">
+        <div class="text-xs text-ink-muted">Due from customers</div>
+        <div class="text-xl font-semibold">Rs {{ s.dueReceivable | number: '1.2-2' }}</div>
+        <div class="text-xs text-ink-muted mt-1">Sales less customer payments received</div>
+      </div>
+      <div class="bg-white border border-border rounded-md p-4">
+        <div class="text-xs text-ink-muted">Ready products</div>
+        <div class="text-xl font-semibold">Rs {{ s.readyProducts.amount | number: '1.2-2' }}</div>
+        @if (s.readyProducts.asOf) {
+          <div class="text-xs text-ink-muted mt-1">as of {{ s.readyProducts.asOf }}</div>
+        }
+      </div>
+      <div class="bg-white border border-border rounded-md p-4">
+        <div class="text-xs text-ink-muted">Capital invested</div>
+        <div class="text-xl font-semibold">Rs {{ s.capitalInvestment | number: '1.2-2' }}</div>
+      </div>
+      <div class="bg-white border border-border rounded-md p-4">
+        <div class="text-xs text-ink-muted">All expenses</div>
+        <div class="text-xl font-semibold">Rs {{ s.allExpenses | number: '1.2-2' }}</div>
+      </div>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="rounded-md border border-border bg-white overflow-hidden">
+        <div class="bg-gray-200 px-4 py-2 font-medium">Account balances</div>
+        <table class="w-full border-collapse text-[13.5px]">
+          <tbody>
+            @for (a of s.balances; track a.id) {
+              <tr class="border-t border-border">
+                <td class="px-4 py-1.5">{{ a.name }} <span class="text-xs text-ink-muted">({{ typeText(a.accountType) }})</span></td>
+                <td class="px-4 py-1.5 text-right" [class.text-red-700]="a.balance < 0">{{ a.balance | number: '1.2-2' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <div class="px-4 py-2 text-xs text-ink-muted border-t border-border">
+          Partner accounts are shown for reference and are not counted in the company total.
+        </div>
+      </div>
+
+      <div class="rounded-md border border-border bg-white overflow-hidden">
+        <div class="bg-gray-200 px-4 py-2 font-medium">{{ s.thisMonth.label }}</div>
+        <table class="w-full border-collapse text-[13.5px]">
+          <tbody>
+            <tr class="border-t border-border">
+              <td class="px-4 py-1.5">Sales</td>
+              <td class="px-4 py-1.5 text-right">{{ s.thisMonth.sales | number: '1.2-2' }}</td>
+            </tr>
+            <tr class="border-t border-border">
+              <td class="px-4 py-1.5">Payments received</td>
+              <td class="px-4 py-1.5 text-right">{{ s.thisMonth.paymentsReceived | number: '1.2-2' }}</td>
+            </tr>
+            <tr class="border-t border-border">
+              <td class="px-4 py-1.5">Expenses</td>
+              <td class="px-4 py-1.5 text-right">{{ s.thisMonth.expenses | number: '1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

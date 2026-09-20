@@ -1,0 +1,21 @@
+<div class="p-4">
+  <!-- matTabContent renders a tab only while it is open, so the sheets always reload
+       fresh after entries are saved in the Daily Entry tab. -->
+  <mat-tab-group animationDuration="0ms">
+    <mat-tab label="Daily Entry">
+      <ng-template matTabContent>
+        <div class="pt-4"><app-daily-entry /></div>
+      </ng-template>
+    </mat-tab>
+    <mat-tab label="Monthly Sheet">
+      <ng-template matTabContent>
+        <div class="pt-4"><app-monthly-sheet /></div>
+      </ng-template>
+    </mat-tab>
+    <mat-tab label="Yearly Summary">
+      <ng-template matTabContent>
+        <div class="pt-4"><app-yearly-summary /></div>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</div>

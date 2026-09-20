@@ -41,6 +41,13 @@
       </mat-form-field>
     </div>
 
+    @if (auth.isAdmin()) {
+      <div class="mt-1 flex flex-wrap items-center gap-3 text-xs">
+        <button mat-stroked-button type="button" (click)="useLaborFromPayroll()">Use payroll for this date</button>
+        <span class="text-ink-muted">{{ payrollHint() }}</span>
+      </div>
+    }
+
     @if (checkingRequirement()) {
       <div class="flex justify-center py-4"><mat-spinner diameter="24" /></div>
     } @else if (requirement().length) {

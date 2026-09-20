@@ -1,0 +1,103 @@
+<div class="p-4">
+  <div class="flex justify-between items-center mb-3">
+    <div class="text-sm">Staff and how each person is paid. A rate change only affects days entered afterwards.</div>
+    @if (!editing()) {
+      <button mat-flat-button color="primary" (click)="startCreate()">+ Add staff</button>
+    }
+  </div>
+
+  @if (editing()) {
+    <div class="bg-white border border-border rounded-md p-4 mb-3" [formGroup]="form">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
+        <mat-form-field appearance="outline" class="col-span-2">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" />
+          @if (form.controls.name.hasError('required')) {
+            <mat-error>Name is required</mat-error>
+          } @else if (form.controls.name.hasError('minlength')) {
+            <mat-error>At least 2 characters</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Phone</mat-label>
+          <input matInput formControlName="phone" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Pay type</mat-label>
+          <mat-select formControlName="payType">
+            @for (t of payTypes; track t.value) {
+              <mat-option [value]="t.value">{{ t.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ form.controls.payType.value === 1 ? 'Rate per hour (Rs)' : 'Rate per day (Rs)' }}</mat-label>
+          <input matInput type="number" formControlName="payRate" />
+          <mat-error>Enter 0 or more</mat-error>
+        </mat-form-field>
+      </div>
+      @if (editing() !== 'new') {
+        <label class="flex items-center gap-2 mt-2 text-sm">
+          <input type="checkbox" formControlName="isActive" />
+          Active
+        </label>
+      }
+      <div class="flex gap-2 mt-3">
+        <button mat-stroked-button (click)="cancel()">Cancel</button>
+        <button mat-flat-button color="primary" [disabled]="saving() || form.invalid" (click)="save()">Save</button>
+      </div>
+    </div>
+  }
+
+  @if (!loading()) {
+    <table mat-table [dataSource]="staff()" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Name</th>
+        <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="phone">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Phone</th>
+        <td mat-cell *matCellDef="let row">{{ row.phone || '—' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="pay_type">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Pay type</th>
+        <td mat-cell *matCellDef="let row">{{ payTypeText(row.pay_type) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="pay_rate">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Rate (Rs)</th>
+        <td mat-cell *matCellDef="let row" class="text-right">
+          {{ row.pay_rate | number: '1.2-2' }} / {{ row.pay_type === 1 ? 'hour' : 'day' }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Status</th>
+        <td mat-cell *matCellDef="let row">
+          <div
+            class="status-chip inline-flex items-center rounded-2xl px-2.5 py-0.5 text-md shadow-md font-medium whitespace-nowrap"
+            [class]="row.is_active ? 'status-chip--active' : 'status-chip--inactive'"
+          >
+            {{ row.is_active ? 'Active' : 'Inactive' }}
+          </div>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="edit">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200"></th>
+        <td mat-cell *matCellDef="let row">
+          <button mat-button (click)="startEdit(row)">Edit</button>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="delete">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200"></th>
+        <td mat-cell *matCellDef="let row">
+          <button mat-button color="warn" (click)="remove(row)">Delete</button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+
+    @if (!staff().length) {
+      <div class="py-11 px-5 text-center text-ink-muted bg-white rounded-md mt-2">No staff yet. Add the first person.</div>
+    }
+  }
+</div>

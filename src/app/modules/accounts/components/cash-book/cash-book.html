@@ -1,0 +1,78 @@
+<div>
+  <div class="text-sm mb-3">Money in and out in date order with a running balance. Opening balance is each account's starting balance plus everything before the start date.</div>
+
+  <div class="bg-white border border-border rounded-md p-3 mb-3" [formGroup]="filter">
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3 items-start">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Account</mat-label>
+        <mat-select formControlName="accountId">
+          <mat-option [value]="null">All accounts</mat-option>
+          @for (a of accounts(); track a.id) {
+            <mat-option [value]="a.id">{{ a.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <app-date-field label="From" formControlName="from" />
+      <app-date-field label="To" formControlName="to" />
+    </div>
+    <div class="flex gap-2 mt-3">
+      <button mat-flat-button color="primary" (click)="load()">Apply</button>
+      <button mat-stroked-button (click)="clear()">Clear</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else if (book(); as b) {
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-3 mb-3">
+      <div class="bg-white border border-border rounded-md p-3">
+        <div class="text-xs text-ink-muted">Opening balance</div>
+        <div class="text-lg font-semibold">Rs {{ b.openingBalance | number: '1.2-2' }}</div>
+      </div>
+      <div class="bg-white border border-border rounded-md p-3">
+        <div class="text-xs text-ink-muted">Money in</div>
+        <div class="text-lg font-semibold text-green-700">Rs {{ b.totalIn | number: '1.2-2' }}</div>
+      </div>
+      <div class="bg-white border border-border rounded-md p-3">
+        <div class="text-xs text-ink-muted">Money out</div>
+        <div class="text-lg font-semibold text-red-700">Rs {{ b.totalOut | number: '1.2-2' }}</div>
+      </div>
+      <div class="bg-white border border-border rounded-md p-3">
+        <div class="text-xs text-ink-muted">Closing balance</div>
+        <div class="text-lg font-semibold">Rs {{ b.closingBalance | number: '1.2-2' }}</div>
+      </div>
+    </div>
+
+    <div class="overflow-auto max-h-[65vh] rounded-md border border-border bg-white">
+      <table class="w-full border-collapse text-[13px]">
+        <thead class="sticky top-0 z-10">
+          <tr class="bg-gray-200">
+            <th class="px-3 py-2 text-left">Date</th>
+            <th class="px-3 py-2 text-left">Description</th>
+            <th class="px-3 py-2 text-left">Category</th>
+            <th class="px-3 py-2 text-left">Account</th>
+            <th class="px-3 py-2 text-right">In (Rs)</th>
+            <th class="px-3 py-2 text-right">Out (Rs)</th>
+            <th class="px-3 py-2 text-right">Balance (Rs)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of b.entries; track e.kind + e.id) {
+            <tr class="border-t border-border">
+              <td class="px-3 py-1.5 whitespace-nowrap">{{ e.date }}</td>
+              <td class="px-3 py-1.5">{{ e.description }}</td>
+              <td class="px-3 py-1.5">{{ e.category }}</td>
+              <td class="px-3 py-1.5">{{ e.account }}</td>
+              <td class="px-3 py-1.5 text-right text-green-700">{{ e.moneyIn ? (e.moneyIn | number: '1.2-2') : '' }}</td>
+              <td class="px-3 py-1.5 text-right text-red-700">{{ e.moneyOut ? (e.moneyOut | number: '1.2-2') : '' }}</td>
+              <td class="px-3 py-1.5 text-right font-medium">{{ e.balance | number: '1.2-2' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      @if (!b.entries.length) {
+        <div class="py-11 px-5 text-center text-ink-muted">No transactions in this period.</div>
+      }
+    </div>
+  }
+</div>
