@@ -54,8 +54,8 @@
       <a routerLink="/procurement" class="text-accent">Purchase Orders</a> and use "Receive against this PO".
     </div>
   } @else if (context()) {
-    <h1 class="text-lg font-semibold m-0 mb-1 font-mono">New GRN against {{ context()!.po.po_number }}</h1>
-    <div class="text-xs text-ink-muted mb-3">{{ context()!.po.supplier_name }} &middot; PO status: {{ statusLabelFor(context()!.po.status) }}</div>
+    <h1 class="text-lg font-medium m-0 mb-1">New GRN against {{ context()!.po.po_number }}</h1>
+    <div class="text-xs  mb-3">{{ context()!.po.supplier_name }} &middot; PO status: {{ statusLabelFor(context()!.po.status) }}</div>
 
     <div class="bg-white border border-border rounded-md p-4 mb-3 overflow-x-auto">
       <table mat-table [dataSource]="lines.controls" class="w-full min-w-[1100px] rounded-md overflow-hidden">
@@ -146,13 +146,13 @@
       }
     </div>
 
-    <div class="text-[11.5px] text-ink-muted bg-white border border-border rounded-md py-3 px-3.5 mb-3 leading-relaxed">
+    <div class="text-[11.5px] bg-white border border-border rounded-md py-3 px-3.5 mb-3 leading-relaxed">
       Accepted quantity posts to inventory as a new batch and updates the PO status automatically.
       Rejected quantity stays out of stock and requires a rejection reason.
     </div>
 
     <div class="flex items-center gap-4">
-      <div class="text-xs text-ink-soft font-mono">
+      <div class="text-xs">
         Received {{ totals.received | number: '1.0-3' }} &middot;
         Accepted {{ totals.accepted | number: '1.0-3' }} &middot;
         Rejected {{ totals.rejected | number: '1.0-3' }}

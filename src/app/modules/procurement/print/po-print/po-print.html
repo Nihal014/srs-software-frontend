@@ -1,0 +1,103 @@
+@if (data; as d) {
+  <div class="bg-white text-black text-[12px] leading-snug">
+    <div class="flex items-start justify-between border-b-2 border-black pb-3">
+      <div>
+        <div class="text-2xl font-bold tracking-wide">{{ company.name }}</div>
+        <div class="text-[11px]">{{ company.unit }}</div>
+      </div>
+      <div class="text-right">
+        <div class="text-xl font-bold uppercase tracking-wide">Purchase Order</div>
+        <div class="font-mono text-base">{{ d.po.po_number }}</div>
+        <div>Date: {{ d.po.created_at | date: 'dd/MM/yyyy' }}</div>
+        <div>Status: {{ statusLabel[d.po.status] }}</div>
+      </div>
+    </div>
+
+    @if (d.po.status === PO_STATUS.Draft) {
+      <div class="mt-2 border border-dashed border-black px-2 py-1 text-center font-semibold uppercase tracking-wide">
+        Draft &mdash; not yet approved
+      </div>
+    }
+
+    <div class="mt-4 grid grid-cols-2 gap-4">
+      <div class="border border-black p-2">
+        <div class="mb-1 text-[10px] font-bold uppercase tracking-wide">Supplier</div>
+        <div class="text-[13px] font-semibold">{{ d.po.supplier_name }}</div>
+        @if (d.supplier?.contact_person) {
+          <div>Attn: {{ d.supplier?.contact_person }}</div>
+        }
+        @if (d.supplier?.address) {
+          <div class="whitespace-pre-line">{{ d.supplier?.address }}</div>
+        }
+        @if (d.supplier?.phone) {
+          <div>Phone: {{ d.supplier?.phone }}</div>
+        }
+        @if (d.supplier?.email) {
+          <div>Email: {{ d.supplier?.email }}</div>
+        }
+        @if (d.supplier?.gstin) {
+          <div>GSTIN: {{ d.supplier?.gstin }}</div>
+        }
+      </div>
+      <div class="border border-black p-2">
+        <div class="mb-1 text-[10px] font-bold uppercase tracking-wide">Order details</div>
+        <div>Deliver to: <span class="font-semibold">{{ d.po.delivery_location || '—' }}</span></div>
+        <div>
+          Expected delivery:
+          <span class="font-semibold">{{ d.po.expected_date ? (d.po.expected_date | date: 'dd/MM/yyyy') : '—' }}</span>
+        </div>
+        <div>Payment terms: <span class="font-semibold">{{ d.po.payment_terms || '—' }}</span></div>
+        @if (d.po.remarks) {
+          <div>Reference: {{ d.po.remarks }}</div>
+        }
+      </div>
+    </div>
+
+    <table class="mt-4 w-full border-collapse border border-black">
+      <thead>
+        <tr class="bg-gray-200">
+          <th class="border border-black px-2 py-1 text-left">#</th>
+          <th class="border border-black px-2 py-1 text-left">Item</th>
+          <th class="border border-black px-2 py-1 text-left">Unit</th>
+          <th class="border border-black px-2 py-1 text-right">Qty</th>
+          <th class="border border-black px-2 py-1 text-right">Rate (Rs)</th>
+          <th class="border border-black px-2 py-1 text-right">Tax %</th>
+          <th class="border border-black px-2 py-1 text-right">Discount (Rs)</th>
+          <th class="border border-black px-2 py-1 text-right">Amount (Rs)</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (line of d.po.lines; track line.id; let i = $index) {
+          <tr class="break-inside-avoid">
+            <td class="border border-black px-2 py-1">{{ i + 1 }}</td>
+            <td class="border border-black px-2 py-1">{{ line.item_name }}</td>
+            <td class="border border-black px-2 py-1">{{ line.unit }}</td>
+            <td class="border border-black px-2 py-1 text-right">{{ line.qty_ordered }}</td>
+            <td class="border border-black px-2 py-1 text-right">{{ line.rate | number: '1.2-2' }}</td>
+            <td class="border border-black px-2 py-1 text-right">{{ line.tax_percent }}</td>
+            <td class="border border-black px-2 py-1 text-right">{{ line.discount | number: '1.2-2' }}</td>
+            <td class="border border-black px-2 py-1 text-right">{{ line.lineTotal | number: '1.2-2' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="mt-3 ml-auto w-72 break-inside-avoid">
+      <div class="flex justify-between py-0.5"><span>Subtotal</span><span>{{ d.po.totals.subtotal | number: '1.2-2' }}</span></div>
+      <div class="flex justify-between py-0.5"><span>Discount</span><span>{{ d.po.totals.discount > 0 ? '-' : '' }}{{ d.po.totals.discount | number: '1.2-2' }}</span></div>
+      <div class="flex justify-between py-0.5"><span>Tax (GST)</span><span>{{ d.po.totals.tax | number: '1.2-2' }}</span></div>
+      <div class="mt-1 flex justify-between border-t-2 border-black pt-1 text-[13px] font-bold">
+        <span>Grand total (Rs)</span><span>{{ d.po.totals.grandTotal | number: '1.2-2' }}</span>
+      </div>
+    </div>
+
+    <div class="mt-16 grid grid-cols-2 gap-16 break-inside-avoid">
+      <div class="border-t border-black pt-1 text-center">Prepared by</div>
+      <div class="border-t border-black pt-1 text-center">Authorised signatory</div>
+    </div>
+
+    <div class="mt-6 text-center text-[10px]">
+      {{ d.po.po_number }} &middot; Printed on {{ printedOn | date: 'dd/MM/yyyy HH:mm' }}
+    </div>
+  </div>
+}

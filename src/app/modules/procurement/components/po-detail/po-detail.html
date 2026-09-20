@@ -5,12 +5,16 @@
     <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
   } @else {
     <div class="flex items-center gap-2.5 mb-3">
-      <h1 class="text-xl font-semibold m-0 font-mono">{{ po()?.po_number }}</h1>
+      <h1 class="text-xl font-medium m-0">{{ po()?.po_number }}</h1>
       @if (po()) {
         <mat-chip [class]="'status-chip status-chip--' + statusSlugFor(po()!.status)">
-          {{ statusLabelFor(po()!.status) }}
+          <span class="font-medium">{{ statusLabelFor(po()!.status) }}</span>
         </mat-chip>
       }
+      <button mat-stroked-button class="ml-auto" (click)="printPo()">
+        <mat-icon>print</mat-icon>
+        Print
+      </button>
     </div>
 
     <div class="bg-white border border-border rounded-md p-4 mb-3" [formGroup]="form">
@@ -53,23 +57,23 @@
       } @else {
         <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
           <div>
-            <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Supplier</div>
+            <div class="text-[11px] tracking-wide uppercase  font-semibold mb-1">Supplier</div>
             <div class="text-sm">{{ supplierName }}</div>
           </div>
           <div>
-            <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Delivery location</div>
+            <div class="text-[11px] tracking-wide uppercase  font-semibold mb-1">Delivery location</div>
             <div class="text-sm">{{ form.controls.deliveryLocation.value || '—' }}</div>
           </div>
           <div>
-            <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Expected date</div>
+            <div class="text-[11px] tracking-wide uppercase  font-semibold mb-1">Expected date</div>
             <div class="text-sm">{{ form.controls.expectedDate.value ? (form.controls.expectedDate.value | date: 'd MMM y') : '—' }}</div>
           </div>
           <div>
-            <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Payment terms</div>
+            <div class="text-[11px] tracking-wide uppercase  font-semibold mb-1">Payment terms</div>
             <div class="text-sm">{{ form.controls.paymentTerms.value || '—' }}</div>
           </div>
           <div class="col-span-2">
-            <div class="text-[11px] tracking-wide uppercase text-ink-faint font-semibold mb-1">Reference / remarks</div>
+            <div class="text-[11px] tracking-wide uppercase font-semibold mb-1">Reference / remarks</div>
             <div class="text-sm">{{ form.controls.remarks.value || '—' }}</div>
           </div>
         </div>

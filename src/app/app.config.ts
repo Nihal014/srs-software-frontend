@@ -5,6 +5,7 @@ import { provideNativeDateAdapter, MAT_DATE_LOCALE } from '@angular/material/cor
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldDefaultOptions } from '@angular/material/form-field';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,5 +15,9 @@ export const appConfig: ApplicationConfig = {
     provideNativeDateAdapter(),
     // en-GB renders dates as dd/mm/yyyy, matching how the client writes them.
     { provide: MAT_DATE_LOCALE, useValue: 'en-GB' },
+    { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: {
+      appearance: 'outline',
+      subscriptSizing: 'dynamic'
+    } satisfies MatFormFieldDefaultOptions }
   ]
 };

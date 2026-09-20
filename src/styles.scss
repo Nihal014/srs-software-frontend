@@ -4,7 +4,6 @@
 // Learn more about theming and how to use it for your application's
 // custom components at https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
-
 html {
   height: 100%;
   @include mat.theme(
@@ -14,10 +13,16 @@ html {
         tertiary: mat.$blue-palette,
       ),
       typography: Roboto,
-      density: 0,
     )
   );
 }
+
+// Dense sizing only for form-field-based controls (input, select, textarea,
+// datepicker, etc.) — other components (buttons, tables, ...) keep the
+// default density since `mat.theme()`'s `density` key would apply globally.
+$dense-form-field: mat.define-density((scale: -4));
+@include mat.form-field-density($dense-form-field);
+@include mat.select-density($dense-form-field);
 
 body {
   // Default the application to a light color theme. This can be changed to
@@ -37,6 +42,22 @@ body {
   height: 100%;
 }
 /* You can add global styles to this file, and also import other style files */
+
+/* ----------------------------------------------------------------------------
+   Number input — hide the native up/down spinner across browsers so
+   type="number" fields (e.g. Tax %) render like plain text inputs.
+   ---------------------------------------------------------------------------- */
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+  }
+}
 
 /* ----------------------------------------------------------------------------
    Dialog — mirrors the embase-finance `.custom-dialog-container` convention:
@@ -89,4 +110,36 @@ body {
 .status-chip--rejected {
   background: #fbe9e7;
   color: #9a2b20;
+}
+
+/* ----------------------------------------------------------------------------
+   Printing — same approach as the embase-finance reference: a document is
+   rendered into the app's named `print` outlet (<app-print-layout>), and while
+   the browser prints, everything else under <app-root> is hidden.
+   ---------------------------------------------------------------------------- */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  app-root > * {
+    display: none !important;
+  }
+  app-root app-print-layout {
+    display: block !important;
+    width: 100% !important;
+  }
+  .cdk-overlay-container {
+    display: none !important;
+  }
+  html,
+  body {
+    height: auto !important;
+    background: #fff !important;
+  }
 }

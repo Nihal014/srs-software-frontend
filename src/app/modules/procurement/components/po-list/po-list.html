@@ -5,7 +5,7 @@
       <button
         type="button"
         (click)="setStatusFilter(filter.value)"
-        class="px-3.5 py-1.5 rounded-full shadow-md border text-[12.5px] whitespace-nowrap transition-colors cursor-pointer"
+        class="px-3.5 py-1.5 rounded-full shadow-md border text-[12.5px] whitespace-nowrap transition-colors cursor-pointer font-medium"
         [class.bg-accent]="activeStatus() === filter.value"
         [class.text-white]="activeStatus() === filter.value"
         [class.border-accent]="activeStatus() === filter.value"

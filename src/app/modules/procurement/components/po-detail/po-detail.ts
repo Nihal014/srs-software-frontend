@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -15,6 +16,8 @@ import { SuppliersService } from 'app/shared/services/suppliers.service';
 import { ItemsService } from 'app/shared/services/items.service';
 import { DeliveryLocationsService } from 'app/shared/services/delivery-locations.service';
 import { AuthService } from 'app/core/services/auth.service';
+import { PrintService } from 'app/print/services/print.service';
+import type { PoPrintData } from '../../print/po-print/po-print';
 import { DateField } from 'app/shared/components/date-field/date-field';
 import { parseDateString, toDateString } from 'app/shared/utils/date.util';
 import { createPoLineGroup, poLineTotal, poTotals, type PoLineGroup } from 'app/shared/forms/po-line.form';
@@ -45,6 +48,7 @@ const PAYMENT_TERMS = ['Net 15 days', 'Net 30 days', 'Cash on delivery'];
     MatSelectModule,
     MatButtonModule,
     MatChipsModule,
+    MatIconModule,
     MatTableModule,
     MatProgressSpinnerModule,
   ],
@@ -60,6 +64,7 @@ export class PoDetail implements OnInit {
   private deliveryLocationsService = inject(DeliveryLocationsService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
+  private printService = inject(PrintService);
   readonly auth = inject(AuthService);
 
   readonly deliveryLocations = signal<DeliveryLocation[]>([]);
@@ -231,9 +236,22 @@ export class PoDetail implements OnInit {
         this.saving.set(false);
         this.snackBar.open(`${po.po_number} saved.`, 'Dismiss', { duration: 2500 });
         this.po.set(po);
+        this.form.markAsPristine();
       },
       error: (err) => this.handleError(err),
     });
+  }
+
+  printPo() {
+    const po = this.po();
+    if (!po) return;
+    // The printout is built from the saved PO, so unsaved draft edits would be silently left out.
+    if (this.form.dirty) {
+      this.snackBar.open('You have unsaved changes — save the draft before printing.', 'Dismiss', { duration: 3500 });
+      return;
+    }
+    const supplier = this.suppliers().find((s) => s.id === po.supplier_id) ?? null;
+    this.printService.printDocumentWithData('procurement/po', { po, supplier } satisfies PoPrintData);
   }
 
   sendForApproval() {

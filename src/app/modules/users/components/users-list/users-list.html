@@ -1,5 +1,5 @@
-<div>
-  <div class="text-sm text-ink-muted mb-4">Approve new signups and manage roles.</div>
+<div class="p-4">
+  <div class="text-sm font-medium mb-4">Approve new signups and manage roles.</div>
 
   @if (!loading()) {
     @if (pending().length > 0) {
@@ -31,7 +31,7 @@
       </div>
     }
 
-    <h2 class="text-sm font-semibold mb-2">All users</h2>
+    <h2 class="text-sm mb-2">All users</h2>
     <table mat-table [dataSource]="others()" class="w-full rounded-md overflow-hidden">
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Name</th>

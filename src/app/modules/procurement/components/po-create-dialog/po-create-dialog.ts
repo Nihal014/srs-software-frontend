@@ -96,8 +96,8 @@ export class PoCreateDialog implements OnInit {
   }
 
   addLine() {
-    const first = this.items()[0];
-    this.lines.push(createPoLineGroup(this.fb, { itemId: first?.id ?? null, rate: first?.rate ?? 0, taxPercent: 0 }));
+    //const first = this.items()[0];
+    this.lines.push(createPoLineGroup(this.fb, { itemId: null, rate:  0, taxPercent: 0 }));
     this.syncLines();
   }
 
