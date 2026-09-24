@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { Shell } from './layout/components/shell/shell';
 import { authGuard } from './core/guards/auth.guard';
 import { printRoutes } from './print/print.routes';
 
@@ -9,21 +8,7 @@ export const routes: Routes = [
   { path: 'signup', loadComponent: () => import('./modules/auth/components/signup/signup').then((m) => m.Signup) },
   {
     path: '',
-    component: Shell,
     canActivate: [authGuard],
-    children: [
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-      { path: 'dashboard', loadChildren: () => import('./modules/dashboard/dashboard.routes') },
-      { path: 'procurement', loadChildren: () => import('./modules/procurement/procurement.routes') },
-      { path: 'grn', loadChildren: () => import('./modules/grn/grn.routes') },
-      { path: 'inventory', loadChildren: () => import('./modules/inventory/inventory.routes') },
-      { path: 'bundle-recipes', loadChildren: () => import('./modules/bundle-recipes/bundle-recipes.routes') },
-      { path: 'bundling', loadChildren: () => import('./modules/bundling/bundling.routes') },
-      { path: 'staff', loadChildren: () => import('./modules/staff/staff.routes') },
-      { path: 'payroll', loadChildren: () => import('./modules/payroll/payroll.routes') },
-      { path: 'accounts', loadChildren: () => import('./modules/accounts/accounts.routes') },
-      { path: 'masters', loadChildren: () => import('./modules/masters/masters.routes') },
-      { path: 'users', loadChildren: () => import('./modules/users/users.routes') },
-    ],
+    loadChildren: () => import('./layout/shell.routes'),
   },
 ];
