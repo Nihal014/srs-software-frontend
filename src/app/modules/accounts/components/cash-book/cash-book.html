@@ -17,7 +17,7 @@
     </div>
     <div class="flex gap-2 mt-3">
       <button mat-flat-button color="primary" (click)="load()">Apply</button>
-      <button mat-stroked-button (click)="clear()">Clear</button>
+      <button mat-stroked-button class="bg-white" (click)="clear()">Clear</button>
     </div>
   </div>
 
@@ -61,7 +61,7 @@
           @for (e of b.entries; track e.kind + e.id; let i = $index) {
             <tr class="border-t border-border">
               <td class="px-3 py-1.5">{{ i + 1 }}</td>
-              <td class="px-3 py-1.5 whitespace-nowrap">{{ e.date }}</td>
+              <td class="px-3 py-1.5 whitespace-nowrap">{{ e.date | date }}</td>
               <td class="px-3 py-1.5">{{ e.description }}</td>
               <td class="px-3 py-1.5">{{ e.category }}</td>
               <td class="px-3 py-1.5">{{ e.account }}</td>

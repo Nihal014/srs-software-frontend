@@ -1,0 +1,113 @@
+<div class="p-4">
+  <a routerLink="/bundling" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Bundling / Production</a>
+
+  <div class="flex flex-wrap justify-between items-start gap-3 mb-4">
+    <h1 class="text-xl font-semibold m-0">Production &mdash; {{ date | date }}</h1>
+    <div class="flex gap-2">
+      @if (auth.isAdmin() && day() && day()!.payrollUnits > 0) {
+        <button mat-stroked-button class="bg-white" [disabled]="recalculating()" (click)="recalculate()">Recalculate labour</button>
+      }
+      <button mat-flat-button color="primary" class="shadow-md bg-blue-800" [routerLink]="['new']">+ Add production</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else if (day(); as d) {
+    <div class="bg-white border border-border rounded-md p-4 mb-3">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-3">
+        <div>
+          <div class="text-[11px] tracking-wide uppercase font-semibold mb-1">Production runs</div>
+          <div class="text-sm">{{ d.runs.length }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] tracking-wide uppercase font-semibold mb-1">Total units</div>
+          <div class="text-sm">{{ d.totalUnits | number: '1.0-3' }}</div>
+        </div>
+        @if (d.wages !== null) {
+          <div>
+            <div class="text-[11px] tracking-wide uppercase font-semibold mb-1">Wages paid this day</div>
+            <div class="text-sm">
+              @if (d.staffCount) {
+                Rs {{ d.wages | number: '1.2-2' }} <span class="text-ink-muted">({{ d.staffCount }} staff)</span>
+              } @else {
+                <span class="text-ink-muted">No payroll entered</span>
+              }
+            </div>
+          </div>
+          <div>
+            <div class="text-[11px] tracking-wide uppercase font-semibold mb-1">Labour per unit (from payroll)</div>
+            <div class="text-sm">
+              @if (laborPerUnit(d); as perUnit) {
+                Rs {{ perUnit | number: '1.2-2' }}
+                <span class="text-ink-muted">= Rs {{ d.wages | number: '1.2-2' }} &divide; {{ d.payrollUnits | number: '1.0-3' }} units</span>
+              } @else {
+                <span class="text-ink-muted">&mdash;</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      @if (d.wages !== null) {
+        <div class="text-xs text-ink-muted mt-3">
+          Labour from payroll is shared across every payroll-based run of the day, so it changes as more runs are added.
+          Runs where labour was typed in by hand keep the amount entered.
+        </div>
+      }
+    </div>
+
+    <table mat-table [dataSource]="d.runs" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="slno">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+        <td mat-cell *matCellDef="let row; let i = index" class="w-16">{{ i + 1 }}</td>
+      </ng-container>
+      <ng-container matColumnDef="production_number">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Production #</th>
+        <td mat-cell *matCellDef="let row">
+          <a [routerLink]="['/bundling', row.id]" class="record-link text-accent no-underline hover:underline">{{ row.production_number }}</a>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="bundle_name">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Product</th>
+        <td mat-cell *matCellDef="let row">{{ row.bundle_name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="qty_produced">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Qty produced</th>
+        <td mat-cell *matCellDef="let row" class="text-right">{{ row.qty_produced | number: '1.0-3' }} {{ row.output_unit }}</td>
+      </ng-container>
+      <ng-container matColumnDef="labor">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Labour / unit (Rs)</th>
+        <td mat-cell *matCellDef="let row" class="text-right">
+          {{ row.labor_cost_per_unit | number: '1.2-2' }}
+          @if (row.labor_from_payroll) {
+            <span class="ml-1 text-xs text-ink-muted" matTooltip="Shared from the day's payroll">(payroll)</span>
+          }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="unit_cost">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Unit cost (Rs)</th>
+        <td mat-cell *matCellDef="let row" class="text-right">{{ row.unit_cost | number: '1.2-2' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="selling_price">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Selling price (Rs)</th>
+        <td mat-cell *matCellDef="let row" class="text-right">{{ row.selling_price | number: '1.2-2' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="margin">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Margin / unit (Rs)</th>
+        <td mat-cell *matCellDef="let row" class="text-right">{{ margin(row) | number: '1.2-2' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="action">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Action</th>
+        <td mat-cell *matCellDef="let row"><button mat-button [routerLink]="['/bundling', row.id]">View</button></td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+
+    @if (!d.runs.length) {
+      <div class="py-11 px-5 text-center text-ink-muted bg-white rounded-md mt-2">
+        Nothing recorded for this date yet. Use "+ Add production" to record the first run.
+      </div>
+    }
+  }
+</div>

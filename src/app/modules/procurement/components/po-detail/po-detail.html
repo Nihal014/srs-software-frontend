@@ -11,7 +11,7 @@
           <span class="font-medium">{{ statusLabelFor(po()!.status) }}</span>
         </mat-chip>
       }
-      <button mat-stroked-button class="ml-auto" (click)="printPo()">
+      <button mat-stroked-button class="bg-white ml-auto" (click)="printPo()">
         <mat-icon>print</mat-icon>
         Print
       </button>
@@ -66,7 +66,7 @@
           </div>
           <div>
             <div class="text-[11px] tracking-wide uppercase  font-semibold mb-1">Expected date</div>
-            <div class="text-sm">{{ form.controls.expectedDate.value ? (form.controls.expectedDate.value | date: 'd MMM y') : '—' }}</div>
+            <div class="text-sm">{{ form.controls.expectedDate.value ? (form.controls.expectedDate.value | date) : '—' }}</div>
           </div>
           <div>
             <div class="text-[11px] tracking-wide uppercase  font-semibold mb-1">Payment terms</div>
@@ -179,7 +179,7 @@
       </table>
 
       @if (isDraft) {
-        <button mat-stroked-button (click)="addLine()" class="mt-2">+ Add line</button>
+        <button mat-stroked-button (click)="addLine()" class="bg-white mt-2">+ Add line</button>
       }
 
       <div class="max-w-80 ml-auto mt-4">
@@ -195,7 +195,7 @@
     <div class="flex gap-2 mb-4">
       @switch (po()?.status) {
         @case (PO_STATUS.Draft) {
-          <button mat-stroked-button [disabled]="saving()" (click)="save()">Save draft</button>
+          <button mat-stroked-button class="bg-white" [disabled]="saving()" (click)="save()">Save draft</button>
           <button mat-flat-button color="primary" [disabled]="saving()" (click)="sendForApproval()">Send for approval</button>
         }
         @case (PO_STATUS.PendingApproval) {
@@ -236,7 +236,7 @@
           </ng-container>
           <ng-container matColumnDef="received_date">
             <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Date</th>
-            <td mat-cell *matCellDef="let g">{{ g.received_date | date: 'd MMM y' }}</td>
+            <td mat-cell *matCellDef="let g">{{ g.received_date | date }}</td>
           </ng-container>
           <ng-container matColumnDef="qty_received">
             <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Received</th>

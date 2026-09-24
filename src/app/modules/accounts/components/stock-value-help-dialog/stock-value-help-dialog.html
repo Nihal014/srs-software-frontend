@@ -1,0 +1,67 @@
+<div mat-dialog-title class="relative border-b border-border bg-accent-800 px-5 pb-4 pt-5">
+  <div class="flex items-center justify-between">
+    <h2 class="text-lg font-medium text-white m-0">How to work out the stock value</h2>
+    <mat-icon (click)="close()" class="cursor-pointer text-white">close</mat-icon>
+  </div>
+</div>
+
+<div mat-dialog-content class="!max-h-[70vh] px-5 pt-4 text-sm leading-relaxed">
+  <p class="mt-0">
+    The stock value is what the finished products you have made but <span class="font-medium">not sold yet</span> cost to make.
+    Here is an example.
+  </p>
+
+  <div class="font-semibold mt-3">Step 1: Count what is left</div>
+  <div>At the end of the day, count the unsold products on the shelf: 12 samosas and 8 cutlets.</div>
+
+  <div class="font-semibold mt-3">Step 2: Find what each one cost to make</div>
+  <div>
+    Open <span class="font-medium">Bundling</span>, open the day, and read the <span class="font-medium">Unit cost</span> column of the runs table.
+    It already includes ingredients, labour and overhead. Here: Samosa Snack Rs 5.55, Cutlet Rs 3.80.
+  </div>
+
+  <div class="font-semibold mt-3">Step 3: Multiply and add up</div>
+  <table class="w-full border-collapse text-[13px] mt-1 mb-1">
+    <thead>
+      <tr class="bg-gray-200 text-left">
+        <th class="px-3 py-1.5">Product</th>
+        <th class="px-3 py-1.5 text-right">Count</th>
+        <th class="px-3 py-1.5 text-right">Unit cost</th>
+        <th class="px-3 py-1.5 text-right">Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="border-b border-border">
+        <td class="px-3 py-1.5">Samosa Snack</td>
+        <td class="px-3 py-1.5 text-right">12</td>
+        <td class="px-3 py-1.5 text-right">Rs 5.55</td>
+        <td class="px-3 py-1.5 text-right">Rs 66.60</td>
+      </tr>
+      <tr class="border-b border-border">
+        <td class="px-3 py-1.5">Cutlet</td>
+        <td class="px-3 py-1.5 text-right">8</td>
+        <td class="px-3 py-1.5 text-right">Rs 3.80</td>
+        <td class="px-3 py-1.5 text-right">Rs 30.40</td>
+      </tr>
+      <tr class="font-semibold bg-gray-50">
+        <td class="px-3 py-1.5" colspan="3">Total stock value</td>
+        <td class="px-3 py-1.5 text-right">Rs 97.00</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="font-semibold mt-3">Step 4: Record it</div>
+  <div>Click <span class="font-medium">+ Record value</span> on this tab, enter today's date and <span class="font-medium">97.00</span>, and save.</div>
+
+  <div class="font-semibold mt-4">Remember</div>
+  <ul class="mt-1 mb-0 pl-5 list-disc">
+    <li>Use the <span class="font-medium">unit cost</span>, not the selling price. The selling price would count profit you have not earned yet.</li>
+    <li>If the same product was made on different days at different unit costs, use the cost of the run the leftovers came from. If you can't tell, the latest run's cost is a reasonable shortcut.</li>
+    <li>Count <span class="font-medium">all</span> unsold products from every day. The total is everything left, not only today's.</li>
+    <li>If everything is sold, record 0.</li>
+  </ul>
+</div>
+
+<div mat-dialog-actions class="flex justify-end px-5 pb-4 pt-4">
+  <button mat-flat-button (click)="close()" class="bg-blue-800 shadow-xl">Got it</button>
+</div>

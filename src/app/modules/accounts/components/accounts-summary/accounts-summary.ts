@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DecimalPipe, PercentPipe } from '@angular/common';
+import { DecimalPipe, PercentPipe, DatePipe } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AccountsService } from 'app/shared/services/accounts.service';
 import { ACCOUNT_TYPE, ACCOUNT_TYPE_LABEL, type AccountType, type AccountsSummary as SummaryData } from 'app/shared/models/accounts.model';
@@ -7,7 +7,7 @@ import { ACCOUNT_TYPE, ACCOUNT_TYPE_LABEL, type AccountType, type AccountsSummar
 @Component({
   selector: 'app-accounts-summary',
   standalone: true,
-  imports: [DecimalPipe, PercentPipe, MatProgressSpinnerModule],
+  imports: [DatePipe, DecimalPipe, PercentPipe, MatProgressSpinnerModule],
   templateUrl: './accounts-summary.html',
 })
 export class AccountsSummary implements OnInit {

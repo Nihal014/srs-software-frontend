@@ -13,3 +13,15 @@ export function parseDateString(value: string | null | undefined): Date | null {
   const date = plain ? new Date(Number(plain[1]), Number(plain[2]) - 1, Number(plain[3])) : new Date(value);
   return isNaN(date.getTime()) ? null : date;
 }
+
+/** How every date is shown to the user (DatePipe default in app.config.ts, and displayDate() below). */
+export const DISPLAY_DATE_FORMAT = 'dd/MM/yyyy';
+
+/** Same format for dates that appear inside TypeScript strings (e.g. confirmation messages). */
+export function displayDate(value: string | null | undefined): string {
+  const date = parseDateString(value);
+  if (!date) return '';
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}/${date.getFullYear()}`;
+}

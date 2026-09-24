@@ -35,7 +35,7 @@
 
       <ng-container matColumnDef="received_date">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Date</th>
-        <td mat-cell *matCellDef="let row">{{ row.received_date | date: 'd MMM y' }}</td>
+        <td mat-cell *matCellDef="let row">{{ row.received_date | date }}</td>
       </ng-container>
 
       <ng-container matColumnDef="qty_received">

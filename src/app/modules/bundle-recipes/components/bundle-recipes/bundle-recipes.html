@@ -83,10 +83,10 @@
           </div>
         }
       </div>
-      <button mat-stroked-button (click)="addLine()" class="mt-2">+ Add ingredient</button>
+      <button mat-stroked-button (click)="addLine()" class="bg-white mt-2">+ Add ingredient</button>
 
       <div class="flex gap-2 mt-4">
-        <button mat-stroked-button (click)="cancel()">Cancel</button>
+        <button mat-stroked-button class="bg-white" (click)="cancel()">Cancel</button>
         <button mat-flat-button color="primary" [disabled]="saving() || form.invalid" (click)="save()">Save</button>
       </div>
     </div>

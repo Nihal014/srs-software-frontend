@@ -1,9 +1,11 @@
 <div class="p-4">
-  <a routerLink="/bundling" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Bundling / Production</a>
-
   @if (loading()) {
+    <a routerLink="/bundling" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Bundling / Production</a>
     <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
   } @else if (production(); as p) {
+    <a [routerLink]="['/bundling/day', p.produced_date]" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">
+      &larr; Production &mdash; {{ p.produced_date | date }}
+    </a>
     <div class="flex items-center gap-2.5 mb-3">
       <h1 class="text-xl font-semibold m-0">{{ p.production_number }}</h1>
       @if (p.shortage_override) {
@@ -21,7 +23,7 @@
         </div>
         <div>
           <div class="text-[11px] tracking-wide uppercase  font-semibold mb-1">Date</div>
-          <div class="text-sm">{{ p.produced_date | date: 'd MMM y' }}</div>
+          <div class="text-sm">{{ p.produced_date | date }}</div>
         </div>
         <div>
           <div class="text-[11px] tracking-wide uppercase  font-semibold mb-1">Qty produced</div>
@@ -33,7 +35,12 @@
         </div>
         <div>
           <div class="text-[11px] tracking-wide uppercase  font-semibold mb-1">Labor / unit</div>
-          <div class="text-sm">Rs {{ p.labor_cost_per_unit | number: '1.2-2' }}</div>
+          <div class="text-sm">
+            Rs {{ p.labor_cost_per_unit | number: '1.2-2' }}
+            @if (p.labor_from_payroll) {
+              <div class="text-xs text-ink-muted">Shared from the day's payroll across all runs that day</div>
+            }
+          </div>
         </div>
         <div>
           <div class="text-[11px] tracking-wide uppercase  font-semibold mb-1">Overhead / unit</div>

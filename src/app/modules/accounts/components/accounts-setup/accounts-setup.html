@@ -1,4 +1,6 @@
 <div class="flex flex-col gap-8">
+  <div class="text-sm">Set up the expense categories and the bank, cash and partner accounts used across Accounts.</div>
+
   <!-- Expense categories -->
   <section>
     <div class="flex justify-between items-center mb-3">
@@ -32,7 +34,7 @@
           <label class="flex items-center gap-2 mt-2 text-sm"><input type="checkbox" formControlName="isActive" /> Active</label>
         }
         <div class="flex gap-2 mt-3">
-          <button mat-stroked-button (click)="editingCategory.set(null)">Cancel</button>
+          <button mat-stroked-button class="bg-white" (click)="editingCategory.set(null)">Cancel</button>
           <button mat-flat-button color="primary" [disabled]="saving() || categoryForm.invalid" (click)="saveCategory()">Save</button>
         </div>
       </div>
@@ -113,7 +115,7 @@
           <label class="flex items-center gap-2 mt-2 text-sm"><input type="checkbox" formControlName="isActive" /> Active</label>
         }
         <div class="flex gap-2 mt-3">
-          <button mat-stroked-button (click)="editingAccount.set(null)">Cancel</button>
+          <button mat-stroked-button class="bg-white" (click)="editingAccount.set(null)">Cancel</button>
           <button mat-flat-button color="primary" [disabled]="saving() || accountForm.invalid" (click)="saveAccount()">Save</button>
         </div>
       </div>
@@ -162,67 +164,5 @@
       <tr mat-header-row *matHeaderRowDef="accountColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: accountColumns"></tr>
     </table>
-  </section>
-
-  <!-- Ready products -->
-  <section>
-    <div class="flex justify-between items-center mb-3">
-      <div>
-        <div class="font-medium">Ready products (stock value)</div>
-        <div class="text-sm text-ink-muted">Value of finished stock on hand. The latest entry counts as revenue in Profit &amp; Loss and in the company total.</div>
-      </div>
-      @if (!addingReady()) {
-        <button mat-flat-button color="primary" (click)="startReady()">+ Record value</button>
-      }
-    </div>
-
-    @if (addingReady()) {
-      <div class="bg-white border border-border rounded-md p-4 mb-3" [formGroup]="readyForm">
-        <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
-          <app-date-field label="As of" formControlName="asOfDate" />
-          <mat-form-field appearance="outline">
-            <mat-label>Value (Rs)</mat-label>
-            <input matInput type="number" formControlName="amount" />
-            <mat-error>Enter 0 or more</mat-error>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Remarks</mat-label>
-            <input matInput formControlName="remarks" />
-          </mat-form-field>
-        </div>
-        <div class="flex gap-2 mt-3">
-          <button mat-stroked-button (click)="addingReady.set(false)">Cancel</button>
-          <button mat-flat-button color="primary" [disabled]="saving() || readyForm.invalid" (click)="saveReady()">Save</button>
-        </div>
-      </div>
-    }
-
-    <table mat-table [dataSource]="ready()" class="w-full rounded-md overflow-hidden">
-      <ng-container matColumnDef="slno">
-        <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
-        <td mat-cell *matCellDef="let row; let i = index" class="w-16">{{ i + 1 }}</td>
-      </ng-container>
-      <ng-container matColumnDef="date">
-        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">As of</th>
-        <td mat-cell *matCellDef="let row">{{ row.as_of_date }}</td>
-      </ng-container>
-      <ng-container matColumnDef="amount">
-        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Value (Rs)</th>
-        <td mat-cell *matCellDef="let row" class="text-right">{{ row.amount | number: '1.2-2' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="remarks">
-        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Remarks</th>
-        <td mat-cell *matCellDef="let row">{{ row.remarks || '—' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="delete">
-        <th mat-header-cell *matHeaderCellDef class="bg-gray-200"></th>
-        <td mat-cell *matCellDef="let row"><button mat-button color="warn" (click)="removeReady(row)">Delete</button></td>
-      </ng-container>
-      <tr mat-header-row *matHeaderRowDef="readyColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: readyColumns"></tr>
-    </table>
-    @if (!ready().length) {
-      <div class="py-8 px-5 text-center text-ink-muted bg-white rounded-md mt-2">No ready-products value recorded yet.</div>
-    }
   </section>
 </div>

@@ -1,9 +1,15 @@
 <div class="p-4">
-  <div class="flex justify-between items-center mb-4">
-    <h1 class="text-xl font-semibold m-0">Bundling / Production</h1>
-    <button mat-flat-button color="primary" [routerLink]="['new']" class="shadow-md bg-blue-800">
-      New production run
-    </button>
+  <div class="flex flex-wrap justify-between items-start gap-3 mb-4">
+    <div>
+      <h1 class="text-xl font-semibold m-0">Bundling / Production</h1>
+      <div class="text-sm text-ink-muted mt-1">Production is recorded day by day. Open a date to see its runs or add a new one.</div>
+    </div>
+    <div class="flex items-start gap-2">
+      <app-date-field class="w-48" label="Production date" [formControl]="dayDate" />
+      <button mat-flat-button color="primary" class="shadow-md bg-blue-800 !mt-1" [disabled]="dayDate.invalid" (click)="openDay()">
+        Open day
+      </button>
+    </div>
   </div>
 
   @if (loading()) {
@@ -14,34 +20,28 @@
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
         <td mat-cell *matCellDef="let row; let i = index" class="w-16">{{ (page() - 1) * pageSize() + i + 1 }}</td>
       </ng-container>
-      <ng-container matColumnDef="production_number">
-        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Production #</th>
-        <td mat-cell *matCellDef="let row" class="font-mono">{{ row.production_number }}</td>
-      </ng-container>
-      <ng-container matColumnDef="bundle_name">
-        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Product</th>
-        <td mat-cell *matCellDef="let row">{{ row.bundle_name }}</td>
-      </ng-container>
-      <ng-container matColumnDef="produced_date">
+      <ng-container matColumnDef="date">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Date</th>
-        <td mat-cell *matCellDef="let row">{{ row.produced_date | date: 'd MMM y' }}</td>
+        <td mat-cell *matCellDef="let row">
+          <a [routerLink]="['/bundling/day', row.date]" class="record-link text-accent font-medium underline">{{ row.date | date }}</a>
+        </td>
       </ng-container>
-      <ng-container matColumnDef="qty_produced">
-        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Qty produced</th>
-        <td mat-cell *matCellDef="let row" class="text-right">{{ row.qty_produced }}</td>
+      <ng-container matColumnDef="runs">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Production runs</th>
+        <td mat-cell *matCellDef="let row" class="text-right">{{ row.runs }}</td>
       </ng-container>
-      <ng-container matColumnDef="unit_cost">
-        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Unit cost (Rs)</th>
-        <td mat-cell *matCellDef="let row" class="text-right">{{ row.unit_cost | number: '1.2-2' }}</td>
+      <ng-container matColumnDef="units">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Total units</th>
+        <td mat-cell *matCellDef="let row" class="text-right">{{ row.units | number: '1.0-3' }}</td>
       </ng-container>
-      <ng-container matColumnDef="selling_price">
-        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Selling price (Rs)</th>
-        <td mat-cell *matCellDef="let row" class="text-right">{{ row.selling_price | number: '1.2-2' }}</td>
+      <ng-container matColumnDef="wages">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Wages paid (Rs)</th>
+        <td mat-cell *matCellDef="let row" class="text-right">{{ row.wages ? (row.wages | number: '1.2-2') : '—' }}</td>
       </ng-container>
       <ng-container matColumnDef="action">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Action</th>
         <td mat-cell *matCellDef="let row">
-          <button mat-button [routerLink]="[row.id]">View</button>
+          <button mat-button [routerLink]="['/bundling/day', row.date]">Open</button>
         </td>
       </ng-container>
       <tr mat-header-row *matHeaderRowDef="columns"></tr>
@@ -50,7 +50,7 @@
 
     @if (!rows().length) {
       <div class="py-11 px-5 text-center text-ink-muted bg-white rounded-md mt-2">
-        No production runs yet. Start the first one.
+        No production yet. Pick a date above and open it to record the first run.
       </div>
     }
     <mat-paginator [length]="total()" [pageSize]="pageSize()" [pageIndex]="page() - 1" [pageSizeOptions]="[25, 50, 100]" (page)="onPage($event)" />

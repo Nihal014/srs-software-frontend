@@ -1,6 +1,6 @@
 <div class="p-4">
-  <a routerLink="/bundling" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Bundling / Production</a>
-  <h1 class="text-xl font-semibold mb-4">New production run</h1>
+  <a [routerLink]="['/bundling/day', date]" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Production &mdash; {{ date | date }}</a>
+  <h1 class="text-xl font-semibold mb-4">New production run &mdash; {{ date | date }}</h1>
 
   <div class="bg-white border border-border rounded-md p-4 mb-3" [formGroup]="form">
     <div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
@@ -19,8 +19,6 @@
         <input matInput type="number" formControlName="qtyProduced" />
         <mat-error>Enter a quantity greater than 0</mat-error>
       </mat-form-field>
-
-      <app-date-field label="Production date" formControlName="producedDate" />
 
       <mat-form-field appearance="outline">
         <mat-label>Labor cost per unit (Rs)</mat-label>
@@ -41,10 +39,23 @@
       </mat-form-field>
     </div>
 
-    @if (auth.isAdmin()) {
-      <div class="mt-1 flex flex-wrap items-center gap-3 text-xs">
-        <button mat-stroked-button type="button" (click)="useLaborFromPayroll()">Use payroll for this date</button>
-        <span class="text-ink-muted">{{ payrollHint() }}</span>
+    @if (auth.isAdmin() && day(); as d) {
+      <div class="mt-1 text-sm">
+        <label class="flex items-center gap-2">
+          <input type="checkbox" formControlName="laborFromPayroll" />
+          Use this day's payroll for labour (shared across the day's runs)
+        </label>
+        <div class="text-xs text-ink-muted mt-1">
+          @if (!d.wages) {
+            No payroll is entered for this date, so type the labour cost by hand (or enter wages under Payroll first).
+          } @else if (sharedLaborPreview; as p) {
+            Rs {{ p.wages | number: '1.2-2' }} wages &divide; {{ p.units | number: '1.0-3' }} units
+            ({{ d.payrollUnits | number: '1.0-3' }} already recorded today + {{ form.controls.qtyProduced.value }} here)
+            = Rs {{ p.perUnit | number: '1.2-2' }} per unit. Earlier payroll-based runs of this day are updated to the same amount.
+          } @else if (form.controls.laborFromPayroll.value) {
+            Rs {{ d.wages | number: '1.2-2' }} was paid to {{ d.staffCount }} staff on this date. Enter the quantity to see the labour per unit.
+          }
+        </div>
       </div>
     }
 
@@ -105,7 +116,7 @@
     }
 
     <div class="flex gap-2 mt-4">
-      <button mat-stroked-button routerLink="/bundling">Cancel</button>
+      <button mat-stroked-button class="bg-white" [routerLink]="['/bundling/day', date]">Cancel</button>
       <button mat-flat-button color="primary" [disabled]="saving() || form.invalid || (hasShortage && !form.controls.override.value)" (click)="submit()">
         {{ saving() ? 'Recording…' : 'Record production' }}
       </button>

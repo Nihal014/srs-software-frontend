@@ -1,0 +1,86 @@
+<div>
+  <div class="flex justify-between items-center mb-3">
+    <div class="text-sm leading-relaxed">
+      <div>
+        The value of finished products you have made but <span class="font-medium">not sold yet</span> (for example, samosas and cutlets left
+        on the shelf). Count your stock, work out what it cost to make, and record that amount here.
+        <button
+          type="button"
+          class="inline-flex align-middle cursor-pointer border-0 bg-transparent p-0"
+          (click)="showHelp()"
+          matTooltip="See a worked example"
+          aria-label="How to work out the stock value"
+        >
+          <mat-icon class="text-amber-700">info</mat-icon>
+        </button>
+      </div>
+      <div class="mt-1 text-ink-muted">
+        Each entry is the <span class="font-medium">total value of all unsold stock on that date</span>. Only the newest entry is used, and it is
+        added to your income in Profit &amp; Loss and to the company total. Whenever your stock changes (some sold, new production added), record
+        a fresh entry with the current total. If everything is sold, record 0.
+      </div>
+    </div>
+    @if (!adding()) {
+      <button mat-flat-button color="primary" class="shrink-0 ml-3" (click)="start()">+ Record value</button>
+    }
+  </div>
+
+  @if (adding()) {
+    <div class="bg-white border border-border rounded-md p-4 mb-3" [formGroup]="form">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
+        <app-date-field label="As of" formControlName="asOfDate" />
+        <mat-form-field appearance="outline">
+          <mat-label>Value (Rs)</mat-label>
+          <input matInput type="number" formControlName="amount" />
+          <mat-error>Enter 0 or more</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Remarks</mat-label>
+          <input matInput formControlName="remarks" />
+        </mat-form-field>
+      </div>
+      <div class="flex gap-2 mt-3">
+        <button mat-stroked-button class="bg-white" (click)="adding.set(false)">Cancel</button>
+        <button mat-flat-button color="primary" [disabled]="saving() || form.invalid" (click)="save()">Save</button>
+      </div>
+    </div>
+  }
+
+  @if (!loading()) {
+    <table mat-table [dataSource]="rows()" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="slno">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+        <td mat-cell *matCellDef="let row; let i = index" class="w-16">{{ i + 1 }}</td>
+      </ng-container>
+      <ng-container matColumnDef="date">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">As of</th>
+        <td mat-cell *matCellDef="let row; let i = index">
+          {{ row.as_of_date | date }}
+          @if (i === 0) {
+            <span class="status-chip status-chip--active ml-2 inline-flex items-center rounded-2xl px-2.5 py-0.5 text-xs shadow-md font-medium whitespace-nowrap">In use</span>
+          }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="amount">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Value (Rs)</th>
+        <td mat-cell *matCellDef="let row" class="text-right">{{ row.amount | number: '1.2-2' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="remarks">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Remarks</th>
+        <td mat-cell *matCellDef="let row">{{ row.remarks || '—' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="delete">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200"></th>
+        <td mat-cell *matCellDef="let row"><button mat-button color="warn" (click)="remove(row)">Delete</button></td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+
+    @if (!rows().length) {
+      <div class="py-11 px-5 text-center text-ink-muted bg-white rounded-md mt-2">
+        No stock value recorded yet, so Profit &amp; Loss counts finished stock as 0.
+      </div>
+    }
+  }
+</div>

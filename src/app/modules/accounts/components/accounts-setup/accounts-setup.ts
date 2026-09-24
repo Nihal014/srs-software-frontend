@@ -7,9 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { DateField } from 'app/shared/components/date-field/date-field';
 import { AccountsService } from 'app/shared/services/accounts.service';
-import { toDateString } from 'app/shared/utils/date.util';
 import {
   ACCOUNT_TYPE,
   ACCOUNT_TYPE_LABEL,
@@ -19,14 +17,13 @@ import {
   type AccountType,
   type ExpenseCategory,
   type PlGroup,
-  type ReadyProducts,
 } from 'app/shared/models/accounts.model';
 import { ConfirmService } from 'app/shared/services/confirm.service';
 
 @Component({
   selector: 'app-accounts-setup',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, DateField],
+  imports: [ReactiveFormsModule, DecimalPipe, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
   templateUrl: './accounts-setup.html',
 })
 export class AccountsSetup implements OnInit {
@@ -39,14 +36,11 @@ export class AccountsSetup implements OnInit {
   readonly accountTypes = Object.values(ACCOUNT_TYPE).map((value) => ({ value, label: ACCOUNT_TYPE_LABEL[value] }));
   readonly categoryColumns = ['slno', 'name', 'group', 'status', 'edit', 'delete'];
   readonly accountColumns = ['slno', 'name', 'type', 'opening', 'balance', 'status', 'edit', 'delete'];
-  readonly readyColumns = ['slno', 'date', 'amount', 'remarks', 'delete'];
 
   readonly categories = signal<ExpenseCategory[]>([]);
   readonly accounts = signal<Account[]>([]);
-  readonly ready = signal<ReadyProducts[]>([]);
   readonly editingCategory = signal<ExpenseCategory | 'new' | null>(null);
   readonly editingAccount = signal<Account | 'new' | null>(null);
-  readonly addingReady = signal(false);
   readonly saving = signal(false);
 
   readonly categoryForm = this.fb.nonNullable.group({
@@ -62,12 +56,6 @@ export class AccountsSetup implements OnInit {
     isActive: true,
   });
 
-  readonly readyForm = this.fb.nonNullable.group({
-    asOfDate: [toDateString(new Date()), Validators.required],
-    amount: [0, [Validators.required, Validators.min(0)]],
-    remarks: '',
-  });
-
   groupText(group: PlGroup): string {
     return PL_GROUP_LABEL[group];
   }
@@ -79,7 +67,6 @@ export class AccountsSetup implements OnInit {
   ngOnInit() {
     this.loadCategories();
     this.loadAccounts();
-    this.loadReady();
   }
 
   loadCategories() {
@@ -88,10 +75,6 @@ export class AccountsSetup implements OnInit {
 
   loadAccounts() {
     this.api.accounts().subscribe((a) => this.accounts.set(a));
-  }
-
-  loadReady() {
-    this.api.readyProducts().subscribe((r) => this.ready.set(r));
   }
 
   private fail(err: { error?: { message?: string } }, fallback: string) {
@@ -186,42 +169,6 @@ export class AccountsSetup implements OnInit {
             this.loadAccounts();
           },
           error: (err) => this.fail(err, 'Could not delete this account.'),
-        });
-      });
-  }
-
-  // ready products
-  startReady() {
-    this.addingReady.set(true);
-    this.readyForm.reset({ asOfDate: toDateString(new Date()), amount: 0, remarks: '' });
-  }
-
-  saveReady() {
-    if (this.readyForm.invalid) {
-      this.readyForm.markAllAsTouched();
-      return;
-    }
-    const v = this.readyForm.getRawValue();
-    this.saving.set(true);
-    this.api.addReadyProducts({ asOfDate: v.asOfDate, amount: v.amount, remarks: v.remarks.trim() || undefined }).subscribe({
-      next: (list) => {
-        this.saving.set(false);
-        this.snackBar.open('Ready-products value recorded.', 'Dismiss', { duration: 2500 });
-        this.addingReady.set(false);
-        this.ready.set(list);
-      },
-      error: (err) => this.fail(err, 'Could not save this value.'),
-    });
-  }
-
-  removeReady(row: ReadyProducts) {
-    this.confirmService
-      .ask({ title: 'Delete', message: `Delete the ${row.as_of_date} entry?`, confirmLabel: 'Delete', destructive: true })
-      .subscribe((confirmed) => {
-        if (!confirmed) return;
-        this.api.removeReadyProducts(row.id).subscribe({
-          next: (list) => this.ready.set(list),
-          error: (err) => this.fail(err, 'Could not delete this entry.'),
         });
       });
   }

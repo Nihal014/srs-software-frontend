@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,7 +12,7 @@ import type { Account, CashBook as CashBookData } from 'app/shared/models/accoun
 @Component({
   selector: 'app-cash-book',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, MatButtonModule, MatFormFieldModule, MatSelectModule, MatProgressSpinnerModule, DateField],
+  imports: [DatePipe, ReactiveFormsModule, DecimalPipe, MatButtonModule, MatFormFieldModule, MatSelectModule, MatProgressSpinnerModule, DateField],
   templateUrl: './cash-book.html',
 })
 export class CashBook implements OnInit {

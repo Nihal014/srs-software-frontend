@@ -10,14 +10,14 @@
     </div>
     <div class="flex gap-2 mt-3">
       <button mat-flat-button color="primary" (click)="load()">Apply</button>
-      <button mat-stroked-button (click)="clear()">Clear</button>
+      <button mat-stroked-button class="bg-white" (click)="clear()">Clear</button>
     </div>
   </div>
 
   @if (loading()) {
     <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
   } @else if (report(); as r) {
-    <div class="rounded-md border border-border bg-white max-w-3xl overflow-hidden">
+    <div class="rounded-md border border-border bg-white overflow-hidden">
       <table class="w-full border-collapse text-[13.5px]">
         <thead>
           <tr class="bg-gray-200">

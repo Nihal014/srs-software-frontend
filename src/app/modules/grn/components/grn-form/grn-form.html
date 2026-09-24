@@ -7,7 +7,7 @@
     <h1 class="text-lg font-semibold m-0 mb-1">{{ detail()!.grn_number }} &mdash; goods received</h1>
     <div class="text-xs text-ink-muted mb-3">
       <a [routerLink]="['/procurement', detail()!.purchase_order_id]" class="text-accent no-underline hover:underline">{{ detail()!.po_number }}</a>
-      &middot; {{ detail()!.supplier_name }} &middot; {{ detail()!.received_date | date: 'd MMM y' }}
+      &middot; {{ detail()!.supplier_name }} &middot; {{ detail()!.received_date | date }}
     </div>
 
     <div class="bg-white border border-border rounded-md p-4 mb-3 overflow-x-auto">
@@ -38,11 +38,11 @@
         </ng-container>
         <ng-container matColumnDef="accepted">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Mfg date</th>
-          <td mat-cell *matCellDef="let l">{{ l.mfg_date | date: 'd MMM y' }}</td>
+          <td mat-cell *matCellDef="let l">{{ l.mfg_date | date }}</td>
         </ng-container>
         <ng-container matColumnDef="rejected">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Expiry</th>
-          <td mat-cell *matCellDef="let l">{{ l.expiry_date | date: 'd MMM y' }}</td>
+          <td mat-cell *matCellDef="let l">{{ l.expiry_date | date }}</td>
         </ng-container>
         <ng-container matColumnDef="reason">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Rejection reason</th>

@@ -23,7 +23,7 @@
                   }
                 </mat-select>
                 <button mat-flat-button color="primary" [disabled]="busyId() === user.id" (click)="approve(user)">Approve</button>
-                <button mat-stroked-button color="warn" [disabled]="busyId() === user.id" (click)="reject(user)">Reject</button>
+                <button mat-stroked-button class="bg-white" color="warn" [disabled]="busyId() === user.id" (click)="reject(user)">Reject</button>
               </div>
             </div>
           }

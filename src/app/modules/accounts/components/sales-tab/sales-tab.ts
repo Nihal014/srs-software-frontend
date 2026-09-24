@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,7 +16,7 @@ import { ConfirmService } from 'app/shared/services/confirm.service';
 @Component({
   selector: 'app-sales-tab',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatPaginatorModule, DateField],
+  imports: [DatePipe, ReactiveFormsModule, DecimalPipe, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatPaginatorModule, DateField],
   templateUrl: './sales-tab.html',
 })
 export class SalesTab implements OnInit {

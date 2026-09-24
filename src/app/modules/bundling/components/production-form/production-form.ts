@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -10,18 +11,18 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { BundleProductsService } from 'app/shared/services/bundle-products.service';
 import { BundleProductionsService } from 'app/shared/services/bundle-productions.service';
 import { AuthService } from 'app/core/services/auth.service';
-import { PayrollService } from 'app/shared/services/payroll.service';
-import { DateField } from 'app/shared/components/date-field/date-field';
-import { toDateString } from 'app/shared/utils/date.util';
-import type { BundleProduct, RequirementLine } from 'app/shared/models/bundle.model';
+import type { BundleProduct, BundleProductionDayDetail, RequirementLine } from 'app/shared/models/bundle.model';
 import { ConfirmService } from 'app/shared/services/confirm.service';
+
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 @Component({
   selector: 'app-production-form',
   standalone: true,
   imports: [
     ReactiveFormsModule,
-    DateField,
+    DatePipe,
+    DecimalPipe,
     RouterLink,
     MatFormFieldModule,
     MatInputModule,
@@ -37,21 +38,25 @@ export class ProductionForm implements OnInit {
   private snackBar = inject(MatSnackBar);
   private confirmService = inject(ConfirmService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
-  private payrollService = inject(PayrollService);
   readonly auth = inject(AuthService);
+
+  /** The production day this run belongs to (from /bundling/day/:date/new). */
+  readonly date = this.route.snapshot.paramMap.get('date') ?? '';
 
   readonly bundles = signal<BundleProduct[]>([]);
   readonly requirement = signal<RequirementLine[]>([]);
   readonly checkingRequirement = signal(false);
   readonly saving = signal(false);
   readonly shortageError = signal<RequirementLine[] | null>(null);
-  readonly payrollHint = signal('');
+  /** That day's payroll picture (Admin only) — drives the shared-labour preview. */
+  readonly day = signal<BundleProductionDayDetail | null>(null);
 
   readonly form = this.fb.group({
     bundleProductId: this.fb.control<number | null>(null, [Validators.required]),
     qtyProduced: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.001)]),
-    producedDate: this.fb.nonNullable.control(toDateString(new Date()), [Validators.required]),
+    laborFromPayroll: this.fb.nonNullable.control(false),
     laborCostPerUnit: this.fb.nonNullable.control(0, [Validators.required, Validators.min(0)]),
     overheadCostPerUnit: this.fb.nonNullable.control(0, [Validators.required, Validators.min(0)]),
     sellingPrice: this.fb.control<number | null>(null, [Validators.min(0)]),
@@ -65,31 +70,47 @@ export class ProductionForm implements OnInit {
   }
 
   ngOnInit() {
-    this.bundleProductsService.list().subscribe((bundles) => this.bundles.set(bundles));
-    this.form.controls.bundleProductId.valueChanges.subscribe(() => this.onBundleChange());
-    this.form.controls.qtyProduced.valueChanges.subscribe(() => this.onQtyChange());
-  }
-
-  /** Admin shortcut: that day's total wages spread over the units being produced. */
-  useLaborFromPayroll() {
-    const { producedDate, qtyProduced } = this.form.getRawValue();
-    if (!qtyProduced || qtyProduced <= 0) {
-      this.snackBar.open('Enter the quantity to produce first.', 'Dismiss', { duration: 3000 });
+    if (!DATE_PATTERN.test(this.date)) {
+      this.router.navigate(['/bundling']);
       return;
     }
-    this.payrollService.getDayTotal(producedDate).subscribe({
-      next: (day) => {
-        if (!day.staffCount) {
-          this.payrollHint.set('No payroll entries for this date.');
-          return;
-        }
-        this.form.controls.laborCostPerUnit.setValue(Math.round((day.total / qtyProduced) * 100) / 100);
-        this.payrollHint.set(
-          `Rs ${day.total.toFixed(2)} paid to ${day.staffCount} staff on this date, divided by ${qtyProduced} units. If several products were made that day, adjust it.`,
-        );
-      },
-      error: (err) => this.snackBar.open(err.error?.message ?? 'Could not read payroll.', 'Dismiss', { duration: 4000 }),
+    this.bundleProductsService.list().subscribe((bundles) => this.bundles.set(bundles));
+    this.form.controls.bundleProductId.valueChanges.subscribe(() => this.onBundleChange());
+    this.form.controls.qtyProduced.valueChanges.subscribe(() => {
+      this.onQtyChange();
+      this.syncLaborPreview();
     });
+    this.form.controls.laborFromPayroll.valueChanges.subscribe(() => this.syncLaborPreview());
+
+    // Admin: load the day so labour can be shared from payroll (wages / units of all payroll-based runs).
+    if (this.auth.isAdmin()) {
+      this.productionsService.getDay(this.date).subscribe((day) => {
+        this.day.set(day);
+        if ((day.wages ?? 0) > 0) this.form.controls.laborFromPayroll.setValue(true);
+        else this.form.controls.laborFromPayroll.disable({ emitEvent: false });
+        this.syncLaborPreview();
+      });
+    }
+  }
+
+  /** Labour per unit if this run joins the day's payroll-based runs (null when it doesn't apply). */
+  get sharedLaborPreview(): { wages: number; units: number; perUnit: number } | null {
+    const day = this.day();
+    const qty = this.form.controls.qtyProduced.value ?? 0;
+    if (!day || !day.wages || !this.form.controls.laborFromPayroll.value || qty <= 0) return null;
+    const units = day.payrollUnits + qty;
+    return { wages: day.wages, units, perUnit: Math.round((day.wages / units) * 100) / 100 };
+  }
+
+  /** In payroll mode the labour box is display-only and shows the live shared amount. */
+  private syncLaborPreview() {
+    const labor = this.form.controls.laborCostPerUnit;
+    if (this.form.controls.laborFromPayroll.value) {
+      labor.disable({ emitEvent: false });
+      labor.setValue(this.sharedLaborPreview?.perUnit ?? 0, { emitEvent: false });
+    } else if (labor.disabled) {
+      labor.enable({ emitEvent: false });
+    }
   }
 
   private onBundleChange() {
@@ -129,11 +150,13 @@ export class ProductionForm implements OnInit {
       return;
     }
     const override = this.form.controls.override.value;
+    const sharedLabor = this.form.controls.laborFromPayroll.value;
     this.confirmService
       .ask({
         title: 'Record production',
         message:
           `Record this production run? The ingredients are taken from stock, soonest expiry first, and it can't be undone.` +
+          (sharedLabor ? `\n\nLabour is shared from this day's payroll, so the day's other payroll-based runs are updated too.` : '') +
           (override ? '\n\nStock override is on: short ingredients will be over-drawn.' : ''),
         confirmLabel: 'Record production',
       })
@@ -150,8 +173,8 @@ export class ProductionForm implements OnInit {
       .create({
         bundleProductId: value.bundleProductId!,
         qtyProduced: value.qtyProduced!,
-        producedDate: value.producedDate,
-        laborCostPerUnit: value.laborCostPerUnit,
+        producedDate: this.date,
+        ...(value.laborFromPayroll ? { laborFromPayroll: true } : { laborCostPerUnit: value.laborCostPerUnit }),
         overheadCostPerUnit: value.overheadCostPerUnit,
         sellingPrice: value.sellingPrice ?? undefined,
         override: value.override,
@@ -160,7 +183,7 @@ export class ProductionForm implements OnInit {
         next: (production) => {
           this.saving.set(false);
           this.snackBar.open(`${production.production_number} recorded.`, 'Dismiss', { duration: 2500 });
-          this.router.navigate(['/bundling', production.id]);
+          this.router.navigate(['/bundling/day', this.date]);
         },
         error: (err) => {
           this.saving.set(false);

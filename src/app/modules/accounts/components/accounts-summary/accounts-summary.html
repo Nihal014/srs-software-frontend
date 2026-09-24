@@ -2,7 +2,7 @@
   @if (loading()) {
     <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
   } @else if (summary(); as s) {
-    <div class="text-sm mb-3">Position as of {{ s.asOf }}.</div>
+    <div class="text-sm mb-3">Position as of {{ s.asOf | date }}.</div>
 
     <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 mb-4">
       <div class="bg-white border border-border rounded-md p-4">
@@ -37,7 +37,7 @@
         <div class="text-xs text-ink-muted">Ready products</div>
         <div class="text-xl font-semibold">Rs {{ s.readyProducts.amount | number: '1.2-2' }}</div>
         @if (s.readyProducts.asOf) {
-          <div class="text-xs text-ink-muted mt-1">as of {{ s.readyProducts.asOf }}</div>
+          <div class="text-xs text-ink-muted mt-1">as of {{ s.readyProducts.asOf | date }}</div>
         }
       </div>
       <div class="bg-white border border-border rounded-md p-4">

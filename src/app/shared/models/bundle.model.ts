@@ -74,6 +74,8 @@ export interface BundleProductionRow {
   produced_date: string;
   material_cost: number;
   labor_cost_per_unit: number;
+  /** 1 when labour was shared from the day's payroll (updates as more runs are added that day). */
+  labor_from_payroll: boolean;
   overhead_cost_per_unit: number;
   unit_cost: number;
   selling_price: number;
@@ -92,7 +94,29 @@ export interface CreateProductionPayload {
   qtyProduced: number;
   producedDate?: string;
   laborCostPerUnit?: number;
+  /** Admin only: share that day's payroll across the day's payroll-based runs. */
+  laborFromPayroll?: boolean;
   overheadCostPerUnit?: number;
   sellingPrice?: number;
   override?: boolean;
+}
+
+/** One row of the Bundling landing list — a date that has production. `wages` is Admin only. */
+export interface BundleProductionDay {
+  date: string;
+  runs: number;
+  units: number;
+  payroll_runs: number;
+  wages?: number;
+}
+
+/** A single date's runs plus its payroll picture; `wages` is null for non-admins. */
+export interface BundleProductionDayDetail {
+  date: string;
+  runs: (BundleProductionRow & { output_unit: string })[];
+  totalUnits: number;
+  /** Units in the runs whose labour is shared from payroll. */
+  payrollUnits: number;
+  wages: number | null;
+  staffCount: number;
 }
