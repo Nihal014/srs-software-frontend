@@ -50,7 +50,7 @@ export class PoCreateDialog implements OnInit {
   private fb = inject(FormBuilder);
 
   readonly paymentTerms = PAYMENT_TERMS;
-  readonly lineColumns = ['item', 'unit', 'qty', 'rate', 'tax', 'discount', 'total', 'remove'];
+  readonly lineColumns = ['slno', 'item', 'unit', 'qty', 'rate', 'tax', 'discount', 'total', 'remove'];
 
   readonly suppliers = signal<Supplier[]>([]);
   readonly items = signal<Item[]>([]);

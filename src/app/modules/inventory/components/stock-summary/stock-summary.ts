@@ -13,7 +13,7 @@ import type { StockSummaryRow } from 'app/shared/models/batch.model';
 export class StockSummary implements OnInit {
   private batchesService = inject(BatchesService);
 
-  readonly columns = ['item_name', 'totalQtyAvailable', 'batchCount', 'nearestExpiryDays'];
+  readonly columns = ['slno', 'item_name', 'usableQty', 'expiredQty', 'batchCount', 'nearestExpiryDays'];
   readonly rows = signal<StockSummaryRow[]>([]);
   readonly loading = signal(true);
 
@@ -22,22 +22,17 @@ export class StockSummary implements OnInit {
       const byItem = new Map<number, StockSummaryRow>();
       for (const b of batches) {
         if (b.qty_available <= 0) continue;
-        const existing = byItem.get(b.item_id);
-        if (existing) {
-          existing.totalQtyAvailable += b.qty_available;
-          existing.batchCount += 1;
-          if (existing.nearestExpiryDays === null || b.days_to_expiry < existing.nearestExpiryDays) {
-            existing.nearestExpiryDays = b.days_to_expiry;
-          }
+        let row = byItem.get(b.item_id);
+        if (!row) {
+          row = { item_id: b.item_id, item_name: b.item_name, unit: b.unit, usableQty: 0, expiredQty: 0, batchCount: 0, nearestExpiryDays: null };
+          byItem.set(b.item_id, row);
+        }
+        if (b.days_to_expiry < 0) {
+          row.expiredQty += b.qty_available;
         } else {
-          byItem.set(b.item_id, {
-            item_id: b.item_id,
-            item_name: b.item_name,
-            unit: b.unit,
-            totalQtyAvailable: b.qty_available,
-            batchCount: 1,
-            nearestExpiryDays: b.days_to_expiry,
-          });
+          row.usableQty += b.qty_available;
+          row.batchCount += 1;
+          if (row.nearestExpiryDays === null || b.days_to_expiry < row.nearestExpiryDays) row.nearestExpiryDays = b.days_to_expiry;
         }
       }
       this.rows.set(Array.from(byItem.values()).sort((a, b) => a.item_name.localeCompare(b.item_name)));

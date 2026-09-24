@@ -39,6 +39,10 @@
     }
 
     <table mat-table [dataSource]="categories()" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="slno">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+        <td mat-cell *matCellDef="let row; let i = index" class="w-16">{{ i + 1 }}</td>
+      </ng-container>
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Name</th>
         <td mat-cell *matCellDef="let row">{{ row.name }}</td>
@@ -116,6 +120,10 @@
     }
 
     <table mat-table [dataSource]="accounts()" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="slno">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+        <td mat-cell *matCellDef="let row; let i = index" class="w-16">{{ i + 1 }}</td>
+      </ng-container>
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Name</th>
         <td mat-cell *matCellDef="let row">{{ row.name }}</td>
@@ -190,6 +198,10 @@
     }
 
     <table mat-table [dataSource]="ready()" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="slno">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+        <td mat-cell *matCellDef="let row; let i = index" class="w-16">{{ i + 1 }}</td>
+      </ng-container>
       <ng-container matColumnDef="date">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">As of</th>
         <td mat-cell *matCellDef="let row">{{ row.as_of_date }}</td>

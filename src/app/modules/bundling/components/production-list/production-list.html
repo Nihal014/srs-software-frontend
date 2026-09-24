@@ -10,6 +10,10 @@
     <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
   } @else {
     <table mat-table [dataSource]="rows()" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="slno">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+        <td mat-cell *matCellDef="let row; let i = index" class="w-16">{{ (page() - 1) * pageSize() + i + 1 }}</td>
+      </ng-container>
       <ng-container matColumnDef="production_number">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Production #</th>
         <td mat-cell *matCellDef="let row" class="font-mono">{{ row.production_number }}</td>
@@ -49,5 +53,6 @@
         No production runs yet. Start the first one.
       </div>
     }
+    <mat-paginator [length]="total()" [pageSize]="pageSize()" [pageIndex]="page() - 1" [pageSizeOptions]="[25, 50, 100]" (page)="onPage($event)" />
   }
 </div>

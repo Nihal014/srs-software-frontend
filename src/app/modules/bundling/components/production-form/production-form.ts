@@ -14,6 +14,7 @@ import { PayrollService } from 'app/shared/services/payroll.service';
 import { DateField } from 'app/shared/components/date-field/date-field';
 import { toDateString } from 'app/shared/utils/date.util';
 import type { BundleProduct, RequirementLine } from 'app/shared/models/bundle.model';
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 @Component({
   selector: 'app-production-form',
@@ -34,6 +35,7 @@ export class ProductionForm implements OnInit {
   private bundleProductsService = inject(BundleProductsService);
   private productionsService = inject(BundleProductionsService);
   private snackBar = inject(MatSnackBar);
+  private confirmService = inject(ConfirmService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
   private payrollService = inject(PayrollService);
@@ -126,6 +128,21 @@ export class ProductionForm implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
+    const override = this.form.controls.override.value;
+    this.confirmService
+      .ask({
+        title: 'Record production',
+        message:
+          `Record this production run? The ingredients are taken from stock, soonest expiry first, and it can't be undone.` +
+          (override ? '\n\nStock override is on: short ingredients will be over-drawn.' : ''),
+        confirmLabel: 'Record production',
+      })
+      .subscribe((confirmed) => {
+        if (confirmed) this.createRun();
+      });
+  }
+
+  private createRun() {
     const value = this.form.getRawValue();
     this.saving.set(true);
     this.shortageError.set(null);

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'environments/environment';
 import type { CreateGrnPayload, GrnContext, GrnDetail, GrnListRow } from 'app/shared/models/grn.model';
+import type { Paged } from 'app/shared/models/paged.model';
 
 @Injectable({ providedIn: 'root' })
 export class GrnService {
@@ -10,6 +11,11 @@ export class GrnService {
 
   list() {
     return this.http.get<GrnListRow[]>(this.base);
+  }
+
+  /** Paged GRN list for the Goods Receipt screen. */
+  listPaged(page: number, pageSize: number) {
+    return this.http.get<Paged<GrnListRow>>(this.base, { params: { page: String(page), pageSize: String(pageSize) } });
   }
 
   get(id: number) {

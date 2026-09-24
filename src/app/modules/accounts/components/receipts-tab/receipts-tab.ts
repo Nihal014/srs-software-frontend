@@ -19,6 +19,7 @@ import {
   type ReceiptPayload,
   type ReceiptSource,
 } from 'app/shared/models/accounts.model';
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 @Component({
   selector: 'app-receipts-tab',
@@ -27,12 +28,13 @@ import {
   templateUrl: './receipts-tab.html',
 })
 export class ReceiptsTab implements OnInit {
+  private confirmService = inject(ConfirmService);
   private api = inject(AccountsService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
   readonly sources = Object.values(RECEIPT_SOURCE).map((value) => ({ value, label: RECEIPT_SOURCE_LABEL[value] }));
-  readonly columns = ['date', 'source', 'description', 'amount', 'account', 'edit', 'delete'];
+  readonly columns = ['slno', 'date', 'source', 'description', 'amount', 'account', 'edit', 'delete'];
   readonly rows = signal<Receipt[]>([]);
   readonly total = signal(0);
   readonly sum = signal(0);
@@ -162,13 +164,17 @@ export class ReceiptsTab implements OnInit {
   }
 
   remove(row: Receipt) {
-    if (!confirm(`Delete this receipt (${row.description}, Rs ${row.amount})? This can't be undone.`)) return;
-    this.api.removeReceipt(row.id).subscribe({
-      next: () => {
-        this.snackBar.open('Receipt deleted.', 'Dismiss', { duration: 2500 });
-        this.load();
-      },
-      error: (err) => this.snackBar.open(err.error?.message ?? 'Could not delete.', 'Dismiss', { duration: 4000 }),
-    });
+    this.confirmService
+      .ask({ title: 'Delete', message: `Delete this receipt (${row.description}, Rs ${row.amount})? This can't be undone.`, confirmLabel: 'Delete', destructive: true })
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.api.removeReceipt(row.id).subscribe({
+          next: () => {
+            this.snackBar.open('Receipt deleted.', 'Dismiss', { duration: 2500 });
+            this.load();
+          },
+          error: (err) => this.snackBar.open(err.error?.message ?? 'Could not delete.', 'Dismiss', { duration: 4000 }),
+        });
+      });
   }
 }

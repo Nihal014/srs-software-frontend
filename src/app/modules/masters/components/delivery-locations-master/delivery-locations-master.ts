@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DeliveryLocationsService } from 'app/shared/services/delivery-locations.service';
 import type { DeliveryLocation, UpsertDeliveryLocationPayload } from 'app/shared/models/delivery-location.model';
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 @Component({
   selector: 'app-delivery-locations-master',
@@ -15,11 +16,12 @@ import type { DeliveryLocation, UpsertDeliveryLocationPayload } from 'app/shared
   templateUrl: './delivery-locations-master.html',
 })
 export class DeliveryLocationsMaster implements OnInit {
+  private confirmService = inject(ConfirmService);
   private deliveryLocationsService = inject(DeliveryLocationsService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
-  readonly columns = ['name', 'status', 'edit', 'delete'];
+  readonly columns = ['slno', 'name', 'status', 'edit', 'delete'];
   readonly locations = signal<DeliveryLocation[]>([]);
   readonly loading = signal(true);
   readonly editing = signal<DeliveryLocation | 'new' | null>(null);
@@ -84,15 +86,19 @@ export class DeliveryLocationsMaster implements OnInit {
   }
 
   remove(location: DeliveryLocation) {
-    if (!confirm(`Delete "${location.name}"? This can't be undone.`)) return;
-    this.deliveryLocationsService.remove(location.id).subscribe({
-      next: () => {
-        this.snackBar.open('Delivery location deleted.', 'Dismiss', { duration: 2500 });
-        this.load();
-      },
-      error: (err) => {
-        this.snackBar.open(err.error?.message ?? 'Could not delete this location.', 'Dismiss', { duration: 5000 });
-      },
-    });
+    this.confirmService
+      .ask({ title: 'Delete', message: `Delete "${location.name}"? This can't be undone.`, confirmLabel: 'Delete', destructive: true })
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.deliveryLocationsService.remove(location.id).subscribe({
+          next: () => {
+            this.snackBar.open('Delivery location deleted.', 'Dismiss', { duration: 2500 });
+            this.load();
+          },
+          error: (err) => {
+            this.snackBar.open(err.error?.message ?? 'Could not delete this location.', 'Dismiss', { duration: 5000 });
+          },
+        });
+      });
   }
 }

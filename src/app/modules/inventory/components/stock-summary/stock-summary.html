@@ -1,17 +1,31 @@
 <div>
-  <div class="text-sm text-ink-muted mb-3">Current on-hand stock, aggregated across all batches per item.</div>
+  <div class="text-sm text-ink-muted mb-3">On-hand stock per item. Only unexpired stock is usable; expired stock stays on the books until it is written off and is never used in production.</div>
 
   @if (loading()) {
     <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
   } @else {
     <table mat-table [dataSource]="rows()" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="slno">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+        <td mat-cell *matCellDef="let row; let i = index" class="w-16">{{ i + 1 }}</td>
+      </ng-container>
       <ng-container matColumnDef="item_name">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Item</th>
         <td mat-cell *matCellDef="let row">{{ row.item_name }}</td>
       </ng-container>
-      <ng-container matColumnDef="totalQtyAvailable">
-        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">In stock</th>
-        <td mat-cell *matCellDef="let row" class="text-right">{{ row.totalQtyAvailable }} {{ row.unit }}</td>
+      <ng-container matColumnDef="usableQty">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Usable stock</th>
+        <td mat-cell *matCellDef="let row" class="text-right">{{ row.usableQty }} {{ row.unit }}</td>
+      </ng-container>
+      <ng-container matColumnDef="expiredQty">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Expired</th>
+        <td mat-cell *matCellDef="let row" class="text-right">
+          @if (row.expiredQty > 0) {
+            <span class="text-red-700 font-medium">{{ row.expiredQty }} {{ row.unit }}</span>
+          } @else {
+            —
+          }
+        </td>
       </ng-container>
       <ng-container matColumnDef="batchCount">
         <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Batches</th>
@@ -21,11 +35,9 @@
         <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Nearest expiry</th>
         <td mat-cell *matCellDef="let row" class="text-right">
           @if (row.nearestExpiryDays !== null) {
-            @if (row.nearestExpiryDays < 0) {
-              <span class="text-red-700 font-medium">Expired</span>
-            } @else {
-              {{ row.nearestExpiryDays }} day{{ row.nearestExpiryDays === 1 ? '' : 's' }}
-            }
+            {{ row.nearestExpiryDays }} day{{ row.nearestExpiryDays === 1 ? '' : 's' }}
+          } @else {
+            —
           }
         </td>
       </ng-container>

@@ -20,6 +20,7 @@ import {
   type ExpenseCategory,
   type ExpensePayload,
 } from 'app/shared/models/accounts.model';
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 @Component({
   selector: 'app-expenses-tab',
@@ -28,12 +29,13 @@ import {
   templateUrl: './expenses-tab.html',
 })
 export class ExpensesTab implements OnInit {
+  private confirmService = inject(ConfirmService);
   private api = inject(AccountsService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
   readonly billStatuses = Object.values(BILL_STATUS).map((value) => ({ value, label: BILL_STATUS_LABEL[value] }));
-  readonly columns = ['date', 'description', 'category', 'qty', 'amount', 'account', 'bill', 'edit', 'delete'];
+  readonly columns = ['slno', 'date', 'description', 'category', 'qty', 'amount', 'account', 'bill', 'edit', 'delete'];
   readonly rows = signal<Expense[]>([]);
   readonly total = signal(0);
   readonly sum = signal(0);
@@ -180,13 +182,17 @@ export class ExpensesTab implements OnInit {
   }
 
   remove(row: Expense) {
-    if (!confirm(`Delete this expense (${row.description}, Rs ${row.amount})? This can't be undone.`)) return;
-    this.api.removeExpense(row.id).subscribe({
-      next: () => {
-        this.snackBar.open('Expense deleted.', 'Dismiss', { duration: 2500 });
-        this.load();
-      },
-      error: (err) => this.snackBar.open(err.error?.message ?? 'Could not delete.', 'Dismiss', { duration: 4000 }),
-    });
+    this.confirmService
+      .ask({ title: 'Delete', message: `Delete this expense (${row.description}, Rs ${row.amount})? This can't be undone.`, confirmLabel: 'Delete', destructive: true })
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.api.removeExpense(row.id).subscribe({
+          next: () => {
+            this.snackBar.open('Expense deleted.', 'Dismiss', { duration: 2500 });
+            this.load();
+          },
+          error: (err) => this.snackBar.open(err.error?.message ?? 'Could not delete.', 'Dismiss', { duration: 4000 }),
+        });
+      });
   }
 }

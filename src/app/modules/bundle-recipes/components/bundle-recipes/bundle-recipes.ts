@@ -6,28 +6,32 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { BundleProductsService } from 'app/shared/services/bundle-products.service';
 import { ItemsService } from 'app/shared/services/items.service';
 import type { BundleProduct, BundleProductDetail, UpsertBundleProductPayload } from 'app/shared/models/bundle.model';
 import type { Item } from 'app/shared/models/item.model';
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 const UNITS = ['kg', 'pcs', 'g', 'l', 'ml'];
 
 @Component({
   selector: 'app-bundle-recipes',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [ReactiveFormsModule, DecimalPipe, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule, MatTooltipModule],
   templateUrl: './bundle-recipes.html',
 })
 export class BundleRecipes implements OnInit {
+  private confirmService = inject(ConfirmService);
   private bundleProductsService = inject(BundleProductsService);
   private itemsService = inject(ItemsService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
   readonly unitOptions = UNITS;
-  readonly columns = ['name', 'output_unit', 'selling_price', 'status', 'edit', 'delete'];
+  readonly columns = ['slno', 'name', 'output_unit', 'selling_price', 'status', 'edit', 'delete'];
   readonly bundles = signal<BundleProduct[]>([]);
   readonly items = signal<Item[]>([]);
   readonly loading = signal(true);
@@ -143,15 +147,19 @@ export class BundleRecipes implements OnInit {
   }
 
   remove(bundle: BundleProduct) {
-    if (!confirm(`Delete "${bundle.name}"? This can't be undone.`)) return;
-    this.bundleProductsService.remove(bundle.id).subscribe({
-      next: () => {
-        this.snackBar.open('Recipe deleted.', 'Dismiss', { duration: 2500 });
-        this.load();
-      },
-      error: (err) => {
-        this.snackBar.open(err.error?.message ?? 'Could not delete this recipe.', 'Dismiss', { duration: 5000 });
-      },
-    });
+    this.confirmService
+      .ask({ title: 'Delete', message: `Delete "${bundle.name}"? This can't be undone.`, confirmLabel: 'Delete', destructive: true })
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.bundleProductsService.remove(bundle.id).subscribe({
+          next: () => {
+            this.snackBar.open('Recipe deleted.', 'Dismiss', { duration: 2500 });
+            this.load();
+          },
+          error: (err) => {
+            this.snackBar.open(err.error?.message ?? 'Could not delete this recipe.', 'Dismiss', { duration: 5000 });
+          },
+        });
+      });
   }
 }

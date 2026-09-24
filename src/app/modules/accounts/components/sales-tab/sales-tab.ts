@@ -11,6 +11,7 @@ import { DateField } from 'app/shared/components/date-field/date-field';
 import { AccountsService } from 'app/shared/services/accounts.service';
 import { toDateString } from 'app/shared/utils/date.util';
 import type { Sale, SalePayload } from 'app/shared/models/accounts.model';
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 @Component({
   selector: 'app-sales-tab',
@@ -19,11 +20,12 @@ import type { Sale, SalePayload } from 'app/shared/models/accounts.model';
   templateUrl: './sales-tab.html',
 })
 export class SalesTab implements OnInit {
+  private confirmService = inject(ConfirmService);
   private api = inject(AccountsService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
-  readonly columns = ['date', 'customer', 'description', 'amount', 'edit', 'delete'];
+  readonly columns = ['slno', 'date', 'customer', 'description', 'amount', 'edit', 'delete'];
   readonly rows = signal<Sale[]>([]);
   readonly total = signal(0);
   readonly sum = signal(0);
@@ -126,13 +128,17 @@ export class SalesTab implements OnInit {
   }
 
   remove(row: Sale) {
-    if (!confirm(`Delete this sale (${row.description}, Rs ${row.amount})? This can't be undone.`)) return;
-    this.api.removeSale(row.id).subscribe({
-      next: () => {
-        this.snackBar.open('Sale deleted.', 'Dismiss', { duration: 2500 });
-        this.load();
-      },
-      error: (err) => this.snackBar.open(err.error?.message ?? 'Could not delete.', 'Dismiss', { duration: 4000 }),
-    });
+    this.confirmService
+      .ask({ title: 'Delete', message: `Delete this sale (${row.description}, Rs ${row.amount})? This can't be undone.`, confirmLabel: 'Delete', destructive: true })
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.api.removeSale(row.id).subscribe({
+          next: () => {
+            this.snackBar.open('Sale deleted.', 'Dismiss', { duration: 2500 });
+            this.load();
+          },
+          error: (err) => this.snackBar.open(err.error?.message ?? 'Could not delete.', 'Dismiss', { duration: 4000 }),
+        });
+      });
   }
 }

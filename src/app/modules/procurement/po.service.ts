@@ -7,6 +7,7 @@ import type {
   PoStatus,
   PurchaseOrderDetail,
 } from 'app/shared/models/purchase-order.model';
+import type { Paged } from 'app/shared/models/paged.model';
 
 @Injectable({ providedIn: 'root' })
 export class PoService {
@@ -17,6 +18,13 @@ export class PoService {
     const params: Record<string, string> = {};
     if (status) params['status'] = String(status);
     return this.http.get<PoListRow[]>(this.base, { params });
+  }
+
+  /** Paged PO list for the Purchase Orders screen. */
+  listPaged(page: number, pageSize: number, status?: PoStatus) {
+    const params: Record<string, string> = { page: String(page), pageSize: String(pageSize) };
+    if (status) params['status'] = String(status);
+    return this.http.get<Paged<PoListRow>>(this.base, { params });
   }
 
   get(id: number) {

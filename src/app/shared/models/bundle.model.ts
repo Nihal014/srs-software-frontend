@@ -42,6 +42,8 @@ export interface RequirementLine {
   unit: string;
   required: number;
   available: number;
+  /** Already-expired stock of this item, not counted in `available`. */
+  expired?: number;
   shortage: number;
 }
 

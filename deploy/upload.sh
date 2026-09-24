@@ -6,7 +6,8 @@ set -euo pipefail
 TARGET="${1:?usage: ./deploy/upload.sh user@server-ip}"
 cd "$(dirname "$0")/.."
 
-npm ci
+# Only install when node_modules is missing: `npm ci` wipes it, which would break a running `ng serve`.
+[ -d node_modules ] || npm ci
 npx ng build --configuration production
 
 DIST=dist/srs-software-frontend/browser

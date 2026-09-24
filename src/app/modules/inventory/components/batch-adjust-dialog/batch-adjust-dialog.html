@@ -1,0 +1,56 @@
+<div mat-dialog-title class="relative border-b border-border bg-accent-800 px-5 pb-4 pt-5">
+  <div class="flex items-center justify-between">
+    <h2 class="text-lg font-medium text-white m-0">{{ data.title ?? 'Adjust stock' }}</h2>
+    <mat-icon (click)="close()" class="cursor-pointer text-white">close</mat-icon>
+  </div>
+</div>
+
+<div mat-dialog-content class="px-5 pt-4" [formGroup]="form">
+  <div class="text-sm mb-3">
+    <span class="font-medium">{{ data.batch.item_name }}</span>
+    &middot; <span class="font-mono">{{ data.batch.batch_number }}</span>
+    &middot; {{ data.batch.qty_available | number: '1.0-3' }} {{ data.batch.unit }} available
+  </div>
+
+  <mat-radio-group formControlName="direction" class="flex gap-5 mb-3 text-sm">
+    <mat-radio-button value="remove">Remove stock</mat-radio-button>
+    <mat-radio-button value="add">Add stock back</mat-radio-button>
+  </mat-radio-group>
+
+  <div class="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
+    <mat-form-field appearance="outline">
+      <mat-label>Quantity ({{ data.batch.unit }})</mat-label>
+      <input matInput type="number" formControlName="qty" />
+      @if (form.controls.direction.value === 'remove' && form.controls.qty.value > data.batch.qty_available) {
+        <mat-error>Only {{ data.batch.qty_available }} {{ data.batch.unit }} available</mat-error>
+      } @else {
+        <mat-error>Enter a quantity above 0</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Reason</mat-label>
+      <mat-select formControlName="reason">
+        @for (r of reasons; track r.value) {
+          <mat-option [value]="r.value">{{ r.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="col-span-2">
+      <mat-label>Remarks (optional)</mat-label>
+      <input matInput formControlName="remarks" />
+    </mat-form-field>
+  </div>
+
+  @if (form.controls.qty.value > 0 && data.batch.item_rate) {
+    <div class="text-xs text-ink-muted -mt-1">
+      Estimated value: Rs {{ estimatedValue | number: '1.2-2' }} (at the item's current rate)
+    </div>
+  }
+</div>
+
+<div mat-dialog-actions class="flex justify-end gap-2 px-5 pb-4 pt-4">
+  <button mat-stroked-button (click)="close()" class="bg-white text-black">Cancel</button>
+  <button mat-flat-button [disabled]="saving() || form.invalid" (click)="save()" class="bg-blue-800 shadow-xl">Save adjustment</button>
+</div>

@@ -13,6 +13,7 @@ import {
   type UserRole,
   type UserStatus,
 } from 'app/shared/models/user.model';
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 @Component({
   selector: 'app-users-list',
@@ -21,6 +22,7 @@ import {
   templateUrl: './users-list.html',
 })
 export class UsersList implements OnInit {
+  private confirmService = inject(ConfirmService);
   private usersService = inject(UsersService);
   private snackBar = inject(MatSnackBar);
 
@@ -30,7 +32,7 @@ export class UsersList implements OnInit {
     { value: USER_ROLE.Staff, label: USER_ROLE_LABEL[USER_ROLE.Staff] },
   ];
 
-  readonly columns = ['name', 'email', 'role', 'status', 'active'];
+  readonly columns = ['slno', 'name', 'email', 'role', 'status', 'active'];
   readonly users = signal<ManagedUser[]>([]);
   readonly loading = signal(true);
   readonly busyId = signal<number | null>(null);
@@ -73,8 +75,16 @@ export class UsersList implements OnInit {
   }
 
   approve(user: ManagedUser) {
-    this.busyId.set(user.id);
     const role = this.pendingRoles.get(user.id) ?? user.role;
+    this.confirmService
+      .ask({ title: 'Approve signup', message: `Approve ${user.name} as ${USER_ROLE_LABEL[role]}?`, confirmLabel: 'Approve' })
+      .subscribe((confirmed) => {
+        if (confirmed) this.runApprove(user, role);
+      });
+  }
+
+  private runApprove(user: ManagedUser, role: UserRole) {
+    this.busyId.set(user.id);
     this.usersService.approve(user.id, role).subscribe({
       next: () => {
         this.busyId.set(null);
@@ -89,19 +99,23 @@ export class UsersList implements OnInit {
   }
 
   reject(user: ManagedUser) {
-    if (!confirm(`Reject ${user.name}'s signup request?`)) return;
-    this.busyId.set(user.id);
-    this.usersService.reject(user.id).subscribe({
-      next: () => {
-        this.busyId.set(null);
-        this.snackBar.open(`${user.name} rejected.`, 'Dismiss', { duration: 2500 });
-        this.load();
-      },
-      error: (err) => {
-        this.busyId.set(null);
-        this.snackBar.open(err.error?.message ?? 'Could not reject this user.', 'Dismiss', { duration: 4000 });
-      },
-    });
+    this.confirmService
+      .ask({ title: 'Reject signup', message: `Reject ${user.name}'s signup request?`, confirmLabel: 'Reject', destructive: true })
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.busyId.set(user.id);
+        this.usersService.reject(user.id).subscribe({
+          next: () => {
+            this.busyId.set(null);
+            this.snackBar.open(`${user.name} rejected.`, 'Dismiss', { duration: 2500 });
+            this.load();
+          },
+          error: (err) => {
+            this.busyId.set(null);
+            this.snackBar.open(err.error?.message ?? 'Could not reject this user.', 'Dismiss', { duration: 4000 });
+          },
+        });
+      });
   }
 
   changeRole(user: ManagedUser, role: UserRole) {
@@ -120,6 +134,20 @@ export class UsersList implements OnInit {
   }
 
   toggleActive(user: ManagedUser) {
+    const deactivating = !!user.is_active;
+    this.confirmService
+      .ask({
+        title: deactivating ? 'Deactivate user' : 'Activate user',
+        message: deactivating ? `Deactivate ${user.name}? They will no longer be able to log in.` : `Activate ${user.name}?`,
+        confirmLabel: deactivating ? 'Deactivate' : 'Activate',
+        destructive: deactivating,
+      })
+      .subscribe((confirmed) => {
+        if (confirmed) this.runToggleActive(user);
+      });
+  }
+
+  private runToggleActive(user: ManagedUser) {
     this.busyId.set(user.id);
     this.usersService.setActive(user.id, !user.is_active).subscribe({
       next: () => {

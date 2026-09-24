@@ -1,4 +1,4 @@
-<div class="p-4 max-w-3xl">
+<div class="p-4">
   <a routerLink="/bundling" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Bundling / Production</a>
   <h1 class="text-xl font-semibold mb-4">New production run</h1>
 
@@ -68,7 +68,12 @@
             <tr class="border-b border-border">
               <td class="px-2 py-1.5">{{ line.itemName }}</td>
               <td class="px-2 py-1.5 text-right">{{ line.required }} {{ line.unit }}</td>
-              <td class="px-2 py-1.5 text-right">{{ line.available }} {{ line.unit }}</td>
+              <td class="px-2 py-1.5 text-right">
+                {{ line.available }} {{ line.unit }}
+                @if (line.expired) {
+                  <div class="text-xs text-red-700">+ {{ line.expired }} {{ line.unit }} expired, not usable</div>
+                }
+              </td>
               <td class="px-2 py-1.5 text-right">
                 @if (line.shortage > 0) {
                   <span class="text-red-700 font-medium">Short by {{ line.shortage }} {{ line.unit }}</span>

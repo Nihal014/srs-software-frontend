@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from 'app/core/services/auth.service';
 import { USER_ROLE_LABEL } from 'app/shared/models/user.model';
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 interface NavItem {
   label: string;
@@ -36,6 +37,7 @@ interface NavItem {
 })
 export class Shell {
   private readonly router = inject(Router);
+  private readonly confirm = inject(ConfirmService);
   readonly auth = inject(AuthService);
   readonly roleLabel = USER_ROLE_LABEL;
 
@@ -63,4 +65,12 @@ export class Shell {
     const url = this.router.url;
     return this.navItems().find((item) => url.startsWith(item.path))?.label ?? 'RSR Bakes ERP';
   });
+
+  confirmLogout() {
+    this.confirm
+      .ask({ title: 'Log out', message: 'Are you sure you want to log out?', confirmLabel: 'Log out' })
+      .subscribe((confirmed) => {
+        if (confirmed) this.auth.logout();
+      });
+  }
 }

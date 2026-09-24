@@ -16,7 +16,7 @@ export class ProductionDetail implements OnInit {
   private route = inject(ActivatedRoute);
   private productionsService = inject(BundleProductionsService);
 
-  readonly consumptionColumns = ['item_name', 'qty_consumed', 'rate_at_time', 'cost', 'batch_number', 'grn_number', 'po_number', 'supplier_name'];
+  readonly consumptionColumns = ['slno', 'item_name', 'qty_consumed', 'rate_at_time', 'cost', 'batch_number', 'grn_number', 'po_number', 'supplier_name'];
   readonly production = signal<BundleProductionDetail | null>(null);
   readonly loading = signal(true);
 

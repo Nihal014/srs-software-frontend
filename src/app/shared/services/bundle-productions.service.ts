@@ -7,6 +7,7 @@ import type {
   CreateProductionPayload,
   RequirementLine,
 } from '../models/bundle.model';
+import type { Paged } from '../models/paged.model';
 
 @Injectable({ providedIn: 'root' })
 export class BundleProductionsService {
@@ -15,6 +16,11 @@ export class BundleProductionsService {
 
   list() {
     return this.http.get<BundleProductionRow[]>(this.base);
+  }
+
+  /** Paged production list for the Bundling screen. */
+  listPaged(page: number, pageSize: number) {
+    return this.http.get<Paged<BundleProductionRow>>(this.base, { params: { page: String(page), pageSize: String(pageSize) } });
   }
 
   findOne(id: number) {

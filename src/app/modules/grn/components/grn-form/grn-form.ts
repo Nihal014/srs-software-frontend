@@ -54,6 +54,7 @@ function createGrnLineGroup(fb: FormBuilder, l: GrnContextLine) {
 }
 
 type GrnLineGroup = ReturnType<typeof createGrnLineGroup>;
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 @Component({
   selector: 'app-grn-form',
@@ -80,9 +81,11 @@ export class GrnForm implements OnInit {
   private router = inject(Router);
   private grnService = inject(GrnService);
   private snackBar = inject(MatSnackBar);
+  private confirmService = inject(ConfirmService);
   private fb = inject(FormBuilder);
 
   readonly lineColumns = [
+    'slno',
     'item',
     'ordered',
     'prior',
@@ -161,7 +164,8 @@ export class GrnForm implements OnInit {
   }
 
   post() {
-    if (!this.poId) return;
+    const poId = this.poId;
+    if (!poId) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.snackBar.open('Fix the highlighted lines before posting.', 'Dismiss', { duration: 3000 });
@@ -172,10 +176,22 @@ export class GrnForm implements OnInit {
       this.snackBar.open('Enter a received quantity on at least one line.', 'Dismiss', { duration: 3000 });
       return;
     }
+    this.confirmService
+      .ask({
+        title: 'Post goods receipt',
+        message: `Post this GRN? ${this.totals.accepted} units will be added to stock and it can't be undone.`,
+        confirmLabel: 'Post GRN',
+      })
+      .subscribe((confirmed) => {
+        if (confirmed) this.submitGrn(poId, linesToPost);
+      });
+  }
+
+  private submitGrn(poId: number, linesToPost: ReturnType<GrnForm['lines']['getRawValue']>) {
     this.saving.set(true);
     this.grnService
       .create({
-        poId: this.poId,
+        poId,
         lines: linesToPost.map((l) => ({
           purchaseOrderLineId: l.purchaseOrderLineId,
           qtyReceived: l.qtyReceived,

@@ -21,6 +21,7 @@ import {
   type PlGroup,
   type ReadyProducts,
 } from 'app/shared/models/accounts.model';
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 @Component({
   selector: 'app-accounts-setup',
@@ -29,15 +30,16 @@ import {
   templateUrl: './accounts-setup.html',
 })
 export class AccountsSetup implements OnInit {
+  private confirmService = inject(ConfirmService);
   private api = inject(AccountsService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
   readonly plGroups = Object.values(PL_GROUP).map((value) => ({ value, label: PL_GROUP_LABEL[value] }));
   readonly accountTypes = Object.values(ACCOUNT_TYPE).map((value) => ({ value, label: ACCOUNT_TYPE_LABEL[value] }));
-  readonly categoryColumns = ['name', 'group', 'status', 'edit', 'delete'];
-  readonly accountColumns = ['name', 'type', 'opening', 'balance', 'status', 'edit', 'delete'];
-  readonly readyColumns = ['date', 'amount', 'remarks', 'delete'];
+  readonly categoryColumns = ['slno', 'name', 'group', 'status', 'edit', 'delete'];
+  readonly accountColumns = ['slno', 'name', 'type', 'opening', 'balance', 'status', 'edit', 'delete'];
+  readonly readyColumns = ['slno', 'date', 'amount', 'remarks', 'delete'];
 
   readonly categories = signal<ExpenseCategory[]>([]);
   readonly accounts = signal<Account[]>([]);
@@ -127,14 +129,18 @@ export class AccountsSetup implements OnInit {
   }
 
   removeCategory(category: ExpenseCategory) {
-    if (!confirm(`Delete category "${category.name}"?`)) return;
-    this.api.removeCategory(category.id).subscribe({
-      next: () => {
-        this.snackBar.open('Category deleted.', 'Dismiss', { duration: 2500 });
-        this.loadCategories();
-      },
-      error: (err) => this.fail(err, 'Could not delete this category.'),
-    });
+    this.confirmService
+      .ask({ title: 'Delete', message: `Delete category "${category.name}"?`, confirmLabel: 'Delete', destructive: true })
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.api.removeCategory(category.id).subscribe({
+          next: () => {
+            this.snackBar.open('Category deleted.', 'Dismiss', { duration: 2500 });
+            this.loadCategories();
+          },
+          error: (err) => this.fail(err, 'Could not delete this category.'),
+        });
+      });
   }
 
   // accounts
@@ -170,14 +176,18 @@ export class AccountsSetup implements OnInit {
   }
 
   removeAccount(account: Account) {
-    if (!confirm(`Delete account "${account.name}"?`)) return;
-    this.api.removeAccount(account.id).subscribe({
-      next: () => {
-        this.snackBar.open('Account deleted.', 'Dismiss', { duration: 2500 });
-        this.loadAccounts();
-      },
-      error: (err) => this.fail(err, 'Could not delete this account.'),
-    });
+    this.confirmService
+      .ask({ title: 'Delete', message: `Delete account "${account.name}"?`, confirmLabel: 'Delete', destructive: true })
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.api.removeAccount(account.id).subscribe({
+          next: () => {
+            this.snackBar.open('Account deleted.', 'Dismiss', { duration: 2500 });
+            this.loadAccounts();
+          },
+          error: (err) => this.fail(err, 'Could not delete this account.'),
+        });
+      });
   }
 
   // ready products
@@ -205,10 +215,14 @@ export class AccountsSetup implements OnInit {
   }
 
   removeReady(row: ReadyProducts) {
-    if (!confirm(`Delete the ${row.as_of_date} entry?`)) return;
-    this.api.removeReadyProducts(row.id).subscribe({
-      next: (list) => this.ready.set(list),
-      error: (err) => this.fail(err, 'Could not delete this entry.'),
-    });
+    this.confirmService
+      .ask({ title: 'Delete', message: `Delete the ${row.as_of_date} entry?`, confirmLabel: 'Delete', destructive: true })
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.api.removeReadyProducts(row.id).subscribe({
+          next: (list) => this.ready.set(list),
+          error: (err) => this.fail(err, 'Could not delete this entry.'),
+        });
+      });
   }
 }

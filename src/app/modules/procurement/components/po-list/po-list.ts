@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatPaginatorModule, type PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { PoService } from '../../po.service';
 import { PoCreateDialog } from '../po-create-dialog/po-create-dialog';
@@ -30,6 +31,7 @@ interface StatusFilter {
     MatTableModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    MatPaginatorModule,
   ],
   templateUrl: './po-list.html',
   styleUrl: './po-list.scss',
@@ -40,6 +42,7 @@ export class PoList implements OnInit {
   private dialog = inject(MatDialog);
 
   readonly displayedColumns = [
+    'slno',
     'po_number',
     'supplier_name',
     'status',
@@ -58,6 +61,9 @@ export class PoList implements OnInit {
   readonly rows = signal<PoListRow[]>([]);
   readonly loading = signal(true);
   readonly activeStatus = signal<PoStatus | null>(null);
+  readonly page = signal(1);
+  readonly pageSize = signal(25);
+  readonly total = signal(0);
 
   statusLabelFor(status: PoStatus): string {
     return PO_STATUS_LABEL[status];
@@ -73,14 +79,22 @@ export class PoList implements OnInit {
 
   load() {
     this.loading.set(true);
-    this.poService.list(this.activeStatus() ?? undefined).subscribe((rows) => {
-      this.rows.set(rows);
+    this.poService.listPaged(this.page(), this.pageSize(), this.activeStatus() ?? undefined).subscribe((res) => {
+      this.rows.set(res.rows);
+      this.total.set(res.total);
       this.loading.set(false);
     });
   }
 
   setStatusFilter(status: PoStatus | null) {
     this.activeStatus.set(status);
+    this.page.set(1);
+    this.load();
+  }
+
+  onPage(e: PageEvent) {
+    this.page.set(e.pageIndex + 1);
+    this.pageSize.set(e.pageSize);
     this.load();
   }
 

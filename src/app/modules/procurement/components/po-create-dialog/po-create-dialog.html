@@ -46,6 +46,10 @@
 
   <div class="mt-2 overflow-x-auto">
     <table mat-table [dataSource]="lineGroups()" class="w-full min-w-[720px] rounded-md overflow-hidden">
+      <ng-container matColumnDef="slno">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+        <td mat-cell *matCellDef="let row; let i = index" class="w-16">{{ i + 1 }}</td>
+      </ng-container>
       <ng-container matColumnDef="item">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Item</th>
         <td mat-cell *matCellDef="let line" [formGroup]="line">

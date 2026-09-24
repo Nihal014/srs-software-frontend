@@ -40,6 +40,7 @@ function createDayLine(fb: FormBuilder, row: DayEntryRow) {
 }
 
 type DayLineGroup = ReturnType<typeof createDayLine>;
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 @Component({
   selector: 'app-daily-entry',
@@ -50,10 +51,11 @@ type DayLineGroup = ReturnType<typeof createDayLine>;
 export class DailyEntry implements OnInit {
   private payrollService = inject(PayrollService);
   private snackBar = inject(MatSnackBar);
+  private confirmService = inject(ConfirmService);
   private fb = inject(FormBuilder);
 
   readonly PAY_TYPE = PAY_TYPE;
-  readonly columns = ['staff', 'rate', 'present', 'hours', 'amount'];
+  readonly columns = ['slno', 'staff', 'rate', 'present', 'hours', 'amount'];
   readonly loading = signal(true);
   readonly saving = signal(false);
   // Mirrors the FormArray so mat-table re-renders when a different day is loaded.
@@ -82,11 +84,16 @@ export class DailyEntry implements OnInit {
 
   private onDateChange(date: string) {
     if (!date || date === this.loadedDate) return;
-    if (this.form.dirty && !confirm('Discard the unsaved changes for this day?')) {
-      this.form.controls.date.setValue(this.loadedDate, { emitEvent: false });
+    if (!this.form.dirty) {
+      this.load(date);
       return;
     }
-    this.load(date);
+    this.confirmService
+      .ask({ title: 'Unsaved changes', message: 'Discard the unsaved changes for this day?', confirmLabel: 'Discard', destructive: true })
+      .subscribe((confirmed) => {
+        if (confirmed) this.load(date);
+        else this.form.controls.date.setValue(this.loadedDate, { emitEvent: false });
+      });
   }
 
   private load(date: string) {

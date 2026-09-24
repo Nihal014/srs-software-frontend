@@ -6,28 +6,34 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatPaginatorModule, type PageEvent } from '@angular/material/paginator';
 import { ItemsService } from 'app/shared/services/items.service';
 import type { Item, UpsertItemPayload } from 'app/shared/models/item.model';
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 const UNITS = ['kg', 'pcs', 'g', 'l', 'ml'];
 
 @Component({
   selector: 'app-items-master',
   standalone: true,
-  imports: [ReactiveFormsModule, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [ReactiveFormsModule, MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatPaginatorModule],
   templateUrl: './items-master.html',
 })
 export class ItemsMaster implements OnInit {
+  private confirmService = inject(ConfirmService);
   private itemsService = inject(ItemsService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
   readonly units = UNITS;
-  readonly columns = ['code', 'name', 'unit', 'rate', 'reorder_level', 'status', 'edit', 'delete'];
+  readonly columns = ['slno', 'code', 'name', 'unit', 'rate', 'reorder_level', 'status', 'edit', 'delete'];
   readonly items = signal<Item[]>([]);
   readonly loading = signal(true);
   readonly editing = signal<Item | 'new' | null>(null);
   readonly saving = signal(false);
+  readonly page = signal(1);
+  readonly pageSize = signal(25);
+  readonly total = signal(0);
 
   readonly form = this.fb.nonNullable.group({
     code: ['', [Validators.required, Validators.minLength(2)]],
@@ -44,10 +50,17 @@ export class ItemsMaster implements OnInit {
 
   load() {
     this.loading.set(true);
-    this.itemsService.listAll().subscribe((items) => {
-      this.items.set(items);
+    this.itemsService.listPaged(this.page(), this.pageSize()).subscribe((res) => {
+      this.items.set(res.rows);
+      this.total.set(res.total);
       this.loading.set(false);
     });
+  }
+
+  onPage(e: PageEvent) {
+    this.page.set(e.pageIndex + 1);
+    this.pageSize.set(e.pageSize);
+    this.load();
   }
 
   startCreate() {
@@ -104,15 +117,19 @@ export class ItemsMaster implements OnInit {
   }
 
   remove(item: Item) {
-    if (!confirm(`Delete "${item.name}"? This can't be undone.`)) return;
-    this.itemsService.remove(item.id).subscribe({
-      next: () => {
-        this.snackBar.open('Item deleted.', 'Dismiss', { duration: 2500 });
-        this.load();
-      },
-      error: (err) => {
-        this.snackBar.open(err.error?.message ?? 'Could not delete this item.', 'Dismiss', { duration: 5000 });
-      },
-    });
+    this.confirmService
+      .ask({ title: 'Delete', message: `Delete "${item.name}"? This can't be undone.`, confirmLabel: 'Delete', destructive: true })
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.itemsService.remove(item.id).subscribe({
+          next: () => {
+            this.snackBar.open('Item deleted.', 'Dismiss', { duration: 2500 });
+            this.load();
+          },
+          error: (err) => {
+            this.snackBar.open(err.error?.message ?? 'Could not delete this item.', 'Dismiss', { duration: 5000 });
+          },
+        });
+      });
   }
 }

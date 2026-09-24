@@ -10,17 +10,21 @@
     <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
   } @else {
     <table mat-table [dataSource]="rows()" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="slno">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+        <td mat-cell *matCellDef="let row; let i = index" class="w-16">{{ (page() - 1) * pageSize() + i + 1 }}</td>
+      </ng-container>
       <ng-container matColumnDef="grn_number">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">GRN Number</th>
         <td mat-cell *matCellDef="let row">
-          <a [routerLink]="['/grn', row.id]" class="text-accent font-medium underline">{{ row.grn_number }}</a>
+          <a [routerLink]="['/grn', row.id]" class="record-link text-accent font-medium underline">{{ row.grn_number }}</a>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="po_number">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Against PO</th>
         <td mat-cell *matCellDef="let row">
-          <a [routerLink]="['/procurement', row.purchase_order_id]" class="text-accent font-medium underline">{{ row.po_number }}</a>
+          <a [routerLink]="['/procurement', row.purchase_order_id]" class="record-link text-accent font-medium underline">{{ row.po_number }}</a>
         </td>
       </ng-container>
 
@@ -61,5 +65,6 @@
     @if (!rows().length) {
       <div class="py-11 px-5 text-center text-ink-muted bg-white rounded-md mt-2">No GRNs posted yet.</div>
     }
+    <mat-paginator [length]="total()" [pageSize]="pageSize()" [pageIndex]="page() - 1" [pageSizeOptions]="[25, 50, 100]" (page)="onPage($event)" />
   }
 </div>

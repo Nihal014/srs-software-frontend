@@ -75,6 +75,32 @@ input[type='number'] {
 }
 
 /* ----------------------------------------------------------------------------
+   Record link — a PO / GRN number that opens that record. The small arrow after
+   it (drawn with the Material Icons ligature font, no extra markup) tells the
+   user the text is clickable and leads to another page.
+   ---------------------------------------------------------------------------- */
+.record-link {
+  white-space: nowrap;
+}
+.record-link::after {
+  content: 'north_east';
+  font-family: 'Material Icons';
+  font-feature-settings: 'liga';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 0.95em;
+  line-height: 1;
+  margin-left: 2px;
+  vertical-align: -1px;
+  opacity: 0.75;
+  display: inline-block;
+  text-decoration: none;
+}
+.record-link:hover::after {
+  opacity: 1;
+}
+
+/* ----------------------------------------------------------------------------
    Status pill — one shared palette so every status/active column across the
    app (PO list & detail, Masters, Users) renders the same chip instead of
    each screen inventing its own colors. Pair with the shape utility classes

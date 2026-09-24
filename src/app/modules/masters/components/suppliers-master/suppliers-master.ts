@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SuppliersService } from 'app/shared/services/suppliers.service';
 import type { Supplier, UpsertSupplierPayload } from 'app/shared/models/supplier.model';
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 const PAYMENT_TERMS = ['Net 15 days', 'Net 30 days', 'Cash on delivery'];
 
@@ -18,12 +19,13 @@ const PAYMENT_TERMS = ['Net 15 days', 'Net 30 days', 'Cash on delivery'];
   templateUrl: './suppliers-master.html',
 })
 export class SuppliersMaster implements OnInit {
+  private confirmService = inject(ConfirmService);
   private suppliersService = inject(SuppliersService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
   readonly paymentTermsOptions = PAYMENT_TERMS;
-  readonly columns = ['name', 'contact_person', 'phone', 'gstin', 'payment_terms', 'status', 'edit', 'delete'];
+  readonly columns = ['slno', 'name', 'contact_person', 'phone', 'gstin', 'payment_terms', 'status', 'edit', 'delete'];
   readonly suppliers = signal<Supplier[]>([]);
   readonly loading = signal(true);
   readonly editing = signal<Supplier | 'new' | null>(null);
@@ -115,15 +117,19 @@ export class SuppliersMaster implements OnInit {
   }
 
   remove(supplier: Supplier) {
-    if (!confirm(`Delete "${supplier.name}"? This can't be undone.`)) return;
-    this.suppliersService.remove(supplier.id).subscribe({
-      next: () => {
-        this.snackBar.open('Supplier deleted.', 'Dismiss', { duration: 2500 });
-        this.load();
-      },
-      error: (err) => {
-        this.snackBar.open(err.error?.message ?? 'Could not delete this supplier.', 'Dismiss', { duration: 5000 });
-      },
-    });
+    this.confirmService
+      .ask({ title: 'Delete', message: `Delete "${supplier.name}"? This can't be undone.`, confirmLabel: 'Delete', destructive: true })
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.suppliersService.remove(supplier.id).subscribe({
+          next: () => {
+            this.snackBar.open('Supplier deleted.', 'Dismiss', { duration: 2500 });
+            this.load();
+          },
+          error: (err) => {
+            this.snackBar.open(err.error?.message ?? 'Could not delete this supplier.', 'Dismiss', { duration: 5000 });
+          },
+        });
+      });
   }
 }

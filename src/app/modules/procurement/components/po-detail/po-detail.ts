@@ -33,6 +33,7 @@ import {
 } from 'app/shared/models/purchase-order.model';
 
 const PAYMENT_TERMS = ['Net 15 days', 'Net 30 days', 'Cash on delivery'];
+import { ConfirmService } from 'app/shared/services/confirm.service';
 
 @Component({
   selector: 'app-po-detail',
@@ -63,6 +64,7 @@ export class PoDetail implements OnInit {
   private itemsService = inject(ItemsService);
   private deliveryLocationsService = inject(DeliveryLocationsService);
   private snackBar = inject(MatSnackBar);
+  private confirmService = inject(ConfirmService);
   private fb = inject(FormBuilder);
   private printService = inject(PrintService);
   readonly auth = inject(AuthService);
@@ -70,8 +72,8 @@ export class PoDetail implements OnInit {
   readonly deliveryLocations = signal<DeliveryLocation[]>([]);
   readonly paymentTerms = PAYMENT_TERMS;
   readonly PO_STATUS = PO_STATUS;
-  readonly lineColumns = ['item', 'unit', 'qty', 'rate', 'tax', 'discount', 'total', 'remove'];
-  readonly grnColumns = ['grn_number', 'received_date', 'qty_received', 'qty_accepted', 'qty_rejected', 'batch_numbers'];
+  readonly lineColumns = ['slno', 'item', 'unit', 'qty', 'rate', 'tax', 'discount', 'total', 'remove'];
+  readonly grnColumns = ['slno', 'grn_number', 'received_date', 'qty_received', 'qty_accepted', 'qty_rejected', 'batch_numbers'];
 
   readonly loading = signal(true);
   readonly saving = signal(false);
@@ -255,6 +257,15 @@ export class PoDetail implements OnInit {
   }
 
   sendForApproval() {
+    const po = this.po();
+    this.confirmService
+      .ask({ title: 'Send for approval', message: `Send ${po?.po_number} for approval?` + (this.form.dirty ? '\n\nYou have unsaved changes to the lines. Save the draft first, they are not included.' : ''), confirmLabel: 'Send for approval' })
+      .subscribe((confirmed) => {
+        if (confirmed) this.runSendForApproval();
+      });
+  }
+
+  private runSendForApproval() {
     this.saving.set(true);
     this.poService.sendForApproval(this.id).subscribe({
       next: () => {
@@ -267,6 +278,15 @@ export class PoDetail implements OnInit {
   }
 
   approve() {
+    const po = this.po();
+    this.confirmService
+      .ask({ title: 'Approve purchase order', message: `Approve ${po?.po_number}?`, confirmLabel: 'Approve' })
+      .subscribe((confirmed) => {
+        if (confirmed) this.runApprove();
+      });
+  }
+
+  private runApprove() {
     this.saving.set(true);
     this.poService.approve(this.id, false).subscribe({
       next: () => {
@@ -276,20 +296,36 @@ export class PoDetail implements OnInit {
       },
       error: (err) => {
         this.saving.set(false);
-        if (err.status === 400 && confirm(err.error?.message + '\n\nConfirm second approval?')) {
-          this.poService.approve(this.id, true).subscribe({
-            next: () => {
-              this.snackBar.open('Approved.', 'Dismiss', { duration: 2500 });
-              this.loadPo();
-            },
-            error: (e) => this.handleError(e),
-          });
+        if (err.status !== 400) {
+          this.handleError(err);
+          return;
         }
+        this.confirmService
+          .ask({ title: 'Second approval required', message: `${err.error?.message}\n\nConfirm second approval?`, confirmLabel: 'Confirm approval' })
+          .subscribe((confirmed) => {
+            if (!confirmed) return;
+            this.poService.approve(this.id, true).subscribe({
+              next: () => {
+                this.snackBar.open('Approved.', 'Dismiss', { duration: 2500 });
+                this.loadPo();
+              },
+              error: (e) => this.handleError(e),
+            });
+          });
       },
     });
   }
 
   sendToSupplier() {
+    const po = this.po();
+    this.confirmService
+      .ask({ title: 'Send to supplier', message: `Send ${po?.po_number} to ${po?.supplier_name}? Goods can be received against it once it is sent.`, confirmLabel: 'Send to supplier' })
+      .subscribe((confirmed) => {
+        if (confirmed) this.runSendToSupplier();
+      });
+  }
+
+  private runSendToSupplier() {
     this.saving.set(true);
     this.poService.sendToSupplier(this.id).subscribe({
       next: () => {
@@ -302,6 +338,15 @@ export class PoDetail implements OnInit {
   }
 
   closePo() {
+    const po = this.po();
+    this.confirmService
+      .ask({ title: 'Close purchase order', message: `Close ${po?.po_number}? No more goods can be received against it.`, confirmLabel: 'Close PO' })
+      .subscribe((confirmed) => {
+        if (confirmed) this.runClosePo();
+      });
+  }
+
+  private runClosePo() {
     this.saving.set(true);
     this.poService.close(this.id).subscribe({
       next: () => {
