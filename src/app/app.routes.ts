@@ -12,7 +12,8 @@ export const routes: Routes = [
     component: Shell,
     canActivate: [authGuard],
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'procurement' },
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      { path: 'dashboard', loadChildren: () => import('./modules/dashboard/dashboard.routes') },
       { path: 'procurement', loadChildren: () => import('./modules/procurement/procurement.routes') },
       { path: 'grn', loadChildren: () => import('./modules/grn/grn.routes') },
       { path: 'inventory', loadChildren: () => import('./modules/inventory/inventory.routes') },

@@ -1,0 +1,159 @@
+<div class="p-4">
+  <!-- ================= Welcome banner with the quote of the day ================= -->
+  <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-accent-900 via-accent-800 to-accent-700 text-white shadow-lg p-6 sm:p-7 mb-6">
+    <!-- decorative wheat, purely visual -->
+    <svg class="pointer-events-none absolute -right-2 -bottom-4 h-56 w-72 text-white opacity-[0.12] hidden sm:block" viewBox="0 0 300 230" fill="currentColor" aria-hidden="true">
+      <g id="ear">
+        <rect x="148" y="70" width="4" height="160" rx="2" />
+        <ellipse cx="136" cy="62" rx="9" ry="20" transform="rotate(-28 136 62)" />
+        <ellipse cx="164" cy="62" rx="9" ry="20" transform="rotate(28 164 62)" />
+        <ellipse cx="134" cy="88" rx="9" ry="20" transform="rotate(-28 134 88)" />
+        <ellipse cx="166" cy="88" rx="9" ry="20" transform="rotate(28 166 88)" />
+        <ellipse cx="132" cy="114" rx="9" ry="20" transform="rotate(-28 132 114)" />
+        <ellipse cx="168" cy="114" rx="9" ry="20" transform="rotate(28 168 114)" />
+        <ellipse cx="150" cy="36" rx="9" ry="22" />
+      </g>
+      <use href="#ear" transform="translate(-80 40) rotate(-14 150 230)" />
+      <use href="#ear" transform="translate(80 40) rotate(14 150 230)" />
+      <use href="#ear" transform="translate(-150 90) rotate(-26 150 230) scale(0.85)" />
+      <use href="#ear" transform="translate(150 90) rotate(26 150 230) scale(0.85)" />
+    </svg>
+
+    <div class="relative flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <div class="text-sm text-white/70">{{ today | date: 'EEEE, dd/MM/yyyy' }}</div>
+        <h2 class="text-2xl font-semibold m-0 mt-1">{{ greeting() }}</h2>
+      </div>
+      <button mat-stroked-button class="!bg-white/10 !text-white !border-white/40 backdrop-blur" [disabled]="loading()" (click)="load()">
+        <mat-icon>refresh</mat-icon> Refresh
+      </button>
+    </div>
+
+    <figure class="relative m-0 mt-5 max-w-2xl">
+      <div class="flex gap-3">
+        <mat-icon class="!h-8 !w-8 !text-[32px] text-accent-300 shrink-0">format_quote</mat-icon>
+        <div>
+          <blockquote class="m-0 text-lg leading-snug italic">{{ quote.text }}</blockquote>
+          <figcaption class="mt-2 text-sm text-white/70">&mdash; {{ quote.author }}</figcaption>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  @if (loading() && !data()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else if (data(); as d) {
+    <!-- ================= Needs attention ================= -->
+    <div class="text-xs font-semibold uppercase tracking-wide text-ink-faint mb-2">Needs attention</div>
+
+    @if (attentionTotal() === 0) {
+      <div class="flex items-center gap-3 bg-white rounded-xl shadow-md border border-border px-5 py-4 mb-6">
+        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-700"><mat-icon>check_circle</mat-icon></span>
+        <div>
+          <div class="font-medium">All clear</div>
+          <div class="text-sm text-ink-muted">No purchase orders waiting, nothing to receive, and no low stock.</div>
+        </div>
+      </div>
+    } @else {
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 mb-6">
+        @if (d.attention.pendingApproval.count) {
+          <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-border p-5">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-700"><mat-icon>pending_actions</mat-icon></span>
+              <div class="font-medium flex-1">Waiting for approval</div>
+              <span class="text-2xl font-semibold">{{ d.attention.pendingApproval.count }}</span>
+            </div>
+            <ul class="list-none m-0 p-0 text-sm">
+              @for (po of d.attention.pendingApproval.items; track po.id) {
+                <li class="py-1.5 border-t border-border first:border-t-0">
+                  <a [routerLink]="['/procurement', po.id]" class="record-link text-accent no-underline hover:underline">{{ po.po_number }}</a>
+                  <span class="text-ink-muted"> &middot; {{ po.supplier_name }}</span>
+                </li>
+              }
+            </ul>
+            <a routerLink="/procurement" class="inline-block mt-3 text-xs text-accent no-underline hover:underline">Open Purchase Orders &rarr;</a>
+          </div>
+        }
+
+        @if (d.attention.awaitingReceipt.count) {
+          <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-border p-5">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 text-purple-700"><mat-icon>local_shipping</mat-icon></span>
+              <div class="font-medium flex-1">Goods still to receive</div>
+              <span class="text-2xl font-semibold">{{ d.attention.awaitingReceipt.count }}</span>
+            </div>
+            <ul class="list-none m-0 p-0 text-sm">
+              @for (po of d.attention.awaitingReceipt.items; track po.id) {
+                <li class="py-1.5 border-t border-border first:border-t-0">
+                  <a [routerLink]="['/grn/new']" [queryParams]="{ poId: po.id }" class="record-link text-accent no-underline hover:underline">{{ po.po_number }}</a>
+                  <span class="text-ink-muted"> &middot; {{ po.supplier_name }}</span>
+                  @if (po.overdue) {
+                    <span class="ml-1 text-xs font-medium text-red-700">overdue since {{ po.expected_date | date }}</span>
+                  } @else if (po.expected_date) {
+                    <span class="ml-1 text-xs text-ink-muted">due {{ po.expected_date | date }}</span>
+                  }
+                </li>
+              }
+            </ul>
+            <a routerLink="/grn" class="inline-block mt-3 text-xs text-accent no-underline hover:underline">Open Goods Receipt &rarr;</a>
+          </div>
+        }
+
+        @if (d.attention.lowStock.count) {
+          <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-border p-5">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-700"><mat-icon>inventory</mat-icon></span>
+              <div class="font-medium flex-1">Low stock</div>
+              <span class="text-2xl font-semibold">{{ d.attention.lowStock.count }}</span>
+            </div>
+            <ul class="list-none m-0 p-0 text-sm">
+              @for (i of d.attention.lowStock.items; track i.id) {
+                <li class="py-1.5 border-t border-border first:border-t-0">
+                  {{ i.name }}
+                  <span class="text-ink-muted">&middot; {{ i.qty | number: '1.0-3' }} {{ i.unit }} left (reorder at {{ i.reorder_level | number: '1.0-3' }})</span>
+                </li>
+              }
+            </ul>
+            <a routerLink="/procurement" class="inline-block mt-3 text-xs text-accent no-underline hover:underline">Open Purchase Orders &rarr;</a>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ================= Production & stock ================= -->
+    <div class="text-xs font-semibold uppercase tracking-wide text-ink-faint mb-2">Production &amp; stock</div>
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-4">
+      <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-border p-5">
+        <div class="flex items-center gap-2 text-xs text-ink-muted"><mat-icon class="text-accent-700">today</mat-icon> Made today</div>
+        <div class="text-2xl font-semibold mt-2">{{ d.production.todayUnits | number: '1.0-3' }} <span class="text-base font-medium text-ink-muted">units</span></div>
+        <div class="text-xs text-ink-muted mt-1">{{ d.production.todayRuns }} production run{{ d.production.todayRuns === 1 ? '' : 's' }}</div>
+      </div>
+      <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-border p-5">
+        <div class="flex items-center gap-2 text-xs text-ink-muted"><mat-icon class="text-accent-700">date_range</mat-icon> Made in the last 7 days</div>
+        <div class="text-2xl font-semibold mt-2">{{ d.production.weekUnits | number: '1.0-3' }} <span class="text-base font-medium text-ink-muted">units</span></div>
+        <div class="text-xs text-ink-muted mt-1">{{ d.production.weekRuns }} production run{{ d.production.weekRuns === 1 ? '' : 's' }}</div>
+      </div>
+      <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-border p-5">
+        <div class="flex items-center gap-2 text-xs text-ink-muted"><mat-icon class="text-accent-700">category</mat-icon> Items in stock</div>
+        <div class="text-2xl font-semibold mt-2">{{ d.stock.itemsInStock }}</div>
+        <div class="text-xs text-ink-muted mt-1">With usable (unexpired) stock</div>
+      </div>
+      @if (d.stock.usableValue !== null) {
+        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-border p-5">
+          <div class="flex items-center gap-2 text-xs text-ink-muted"><mat-icon class="text-accent-700">payments</mat-icon> Usable stock value</div>
+          <div class="text-2xl font-semibold mt-2">Rs {{ d.stock.usableValue | number: '1.2-2' }}</div>
+          <div class="text-xs text-ink-muted mt-1">Raw materials, at current rates</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-border p-5">
+          <div class="flex items-center gap-2 text-xs text-ink-muted"><mat-icon class="text-red-700">warning_amber</mat-icon> Expired stock value</div>
+          <div class="text-2xl font-semibold mt-2" [class.text-red-700]="(d.stock.expiredValue ?? 0) > 0">Rs {{ d.stock.expiredValue | number: '1.2-2' }}</div>
+          <div class="text-xs text-ink-muted mt-1">Still on the books until written off</div>
+        </div>
+      }
+    </div>
+
+    @if (loadedAt(); as at) {
+      <div class="text-xs text-ink-muted mt-4">Updated {{ at | date: 'HH:mm' }}</div>
+    }
+  }
+</div>

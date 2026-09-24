@@ -42,6 +42,7 @@ export class Shell {
   readonly roleLabel = USER_ROLE_LABEL;
 
   private readonly allNavItems: NavItem[] = [
+    { label: 'Dashboard', path: '/dashboard' },
     { label: 'Purchase Orders', path: '/procurement' },
     { label: 'Goods Receipt (GRN)', path: '/grn' },
     { label: 'Inventory', path: '/inventory' },

@@ -36,7 +36,7 @@ export class Login {
       next: (res) => {
         this.authService.setSession(res);
         this.loading.set(false);
-        this.router.navigate(['/procurement']);
+        this.router.navigate(['/dashboard']);
       },
       error: (err) => {
         this.loading.set(false);
