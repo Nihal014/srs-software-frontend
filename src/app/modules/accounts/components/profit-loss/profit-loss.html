@@ -39,7 +39,7 @@
             <td class="px-4 py-2 text-right">{{ r.revenue | number: '1.2-2' }}</td>
           </tr>
 
-          <tr class="bg-gray-100"><td colspan="2" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">Direct costs</td></tr>
+          <tr class="bg-gray-100"><td colspan="2" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide">Direct costs</td></tr>
           @for (l of r.directCosts.lines; track l.categoryId) {
             <tr class="border-t border-border">
               <td class="px-4 py-1.5 pl-8">{{ l.name }}</td>
@@ -54,13 +54,13 @@
             <td class="px-4 py-2">
               Gross margin
               @if (r.grossMarginPct !== null) {
-                <span class="ml-2 font-normal text-ink-muted">({{ r.grossMarginPct | percent: '1.1-2' }} of sales)</span>
+                <span class="ml-2 font-normal">({{ r.grossMarginPct | percent: '1.1-2' }} of sales)</span>
               }
             </td>
             <td class="px-4 py-2 text-right">{{ r.grossMargin | number: '1.2-2' }}</td>
           </tr>
 
-          <tr class="bg-gray-100"><td colspan="2" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">Other expenses</td></tr>
+          <tr class="bg-gray-100"><td colspan="2" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide">Other expenses</td></tr>
           @for (l of r.otherExpenses.lines; track l.categoryId) {
             <tr class="border-t border-border">
               <td class="px-4 py-1.5 pl-8">{{ l.name }}</td>
@@ -75,13 +75,13 @@
             <td class="px-4 py-2">
               Net margin
               @if (r.netMarginPct !== null) {
-                <span class="ml-2 font-normal text-ink-muted">({{ r.netMarginPct | percent: '1.1-2' }} of sales)</span>
+                <span class="ml-2 font-normal">({{ r.netMarginPct | percent: '1.1-2' }} of sales)</span>
               }
             </td>
             <td class="px-4 py-2 text-right">{{ r.netMargin | number: '1.2-2' }}</td>
           </tr>
 
-          <tr class="bg-gray-100"><td colspan="2" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">Capital spending (not in profit)</td></tr>
+          <tr class="bg-gray-100"><td colspan="2" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide">Capital spending (not in profit)</td></tr>
           @for (l of r.capital.lines; track l.categoryId) {
             <tr class="border-t border-border">
               <td class="px-4 py-1.5 pl-8">{{ l.name }}</td>

@@ -8,6 +8,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatPaginatorModule, type PageEvent } from '@angular/material/paginator';
 import { ItemsService } from 'app/shared/services/items.service';
+import { ItemCategoriesService } from 'app/shared/services/item-categories.service';
+import type { ItemCategory } from 'app/shared/models/item-category.model';
 import type { Item, UpsertItemPayload } from 'app/shared/models/item.model';
 import { ConfirmService } from 'app/shared/services/confirm.service';
 
@@ -22,12 +24,14 @@ const UNITS = ['kg', 'pcs', 'g', 'l', 'ml'];
 export class ItemsMaster implements OnInit {
   private confirmService = inject(ConfirmService);
   private itemsService = inject(ItemsService);
+  private categoriesService = inject(ItemCategoriesService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
   readonly units = UNITS;
-  readonly columns = ['slno', 'code', 'name', 'unit', 'rate', 'reorder_level', 'status', 'edit', 'delete'];
+  readonly columns = ['slno', 'code', 'name', 'category', 'unit', 'rate', 'reorder_level', 'status', 'edit', 'delete'];
   readonly items = signal<Item[]>([]);
+  readonly categories = signal<ItemCategory[]>([]);
   readonly loading = signal(true);
   readonly editing = signal<Item | 'new' | null>(null);
   readonly saving = signal(false);
@@ -39,13 +43,27 @@ export class ItemsMaster implements OnInit {
     code: ['', [Validators.required, Validators.minLength(2)]],
     name: ['', [Validators.required, Validators.minLength(2)]],
     unit: [UNITS[0], [Validators.required]],
+    categoryId: this.fb.control<number | null>(null),
     rate: [0, [Validators.required, Validators.min(0)]],
     reorderLevel: [0, [Validators.required, Validators.min(0)]],
     isActive: true,
   });
 
   ngOnInit() {
+    this.loadCategories();
     this.load();
+  }
+
+  /** The Master Data tabs stay alive side by side, so re-read the categories whenever the form opens. */
+  private loadCategories() {
+    this.categoriesService.listAll().subscribe((categories) => this.categories.set(categories));
+  }
+
+  /** Active categories for the picker, plus the item's own category even when it has since been deactivated. */
+  pickableCategories(): ItemCategory[] {
+    const editing = this.editing();
+    const current = editing && editing !== 'new' ? editing.category_id : null;
+    return this.categories().filter((c) => c.is_active || c.id === current);
   }
 
   load() {
@@ -64,16 +82,19 @@ export class ItemsMaster implements OnInit {
   }
 
   startCreate() {
+    this.loadCategories();
     this.editing.set('new');
-    this.form.reset({ code: '', name: '', unit: UNITS[0], rate: 0, reorderLevel: 0, isActive: true });
+    this.form.reset({ code: '', name: '', unit: UNITS[0], categoryId: null, rate: 0, reorderLevel: 0, isActive: true });
   }
 
   startEdit(item: Item) {
+    this.loadCategories();
     this.editing.set(item);
     this.form.reset({
       code: item.code,
       name: item.name,
       unit: item.unit,
+      categoryId: item.category_id,
       rate: item.rate,
       reorderLevel: item.reorder_level,
       isActive: !!item.is_active,
@@ -95,6 +116,7 @@ export class ItemsMaster implements OnInit {
       code: value.code.trim(),
       name: value.name.trim(),
       unit: value.unit,
+      categoryId: value.categoryId,
       reorderLevel: value.reorderLevel,
       isActive: value.isActive,
     };

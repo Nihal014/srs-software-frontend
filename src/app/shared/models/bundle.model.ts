@@ -13,6 +13,7 @@ export interface BundleBomLine {
   item_id: number;
   item_code: string;
   item_name: string;
+  category_name?: string | null;
   unit: string;
   qty_per_unit: number;
 }

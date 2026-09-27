@@ -8,7 +8,7 @@
 <div mat-dialog-content class="px-5 pt-4" [formGroup]="form">
   <div class="text-sm mb-3">
     <span class="font-medium">{{ data.batch.item_name }}</span>
-    &middot; <span class="font-mono">{{ data.batch.batch_number }}</span>
+    &middot; <span>{{ data.batch.batch_number }}</span>
     &middot; {{ data.batch.qty_available | number: '1.0-3' }} {{ data.batch.unit }} available
   </div>
 
@@ -44,7 +44,7 @@
   </div>
 
   @if (form.controls.qty.value > 0 && data.batch.item_rate) {
-    <div class="text-xs text-ink-muted -mt-1">
+    <div class="text-xs -mt-1">
       Estimated value: Rs {{ estimatedValue | number: '1.2-2' }} (at the item's current rate)
     </div>
   }

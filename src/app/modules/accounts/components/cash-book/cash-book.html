@@ -26,19 +26,19 @@
   } @else if (book(); as b) {
     <div class="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-3 mb-3">
       <div class="bg-white border border-border rounded-md p-3">
-        <div class="text-xs text-ink-muted">Opening balance</div>
+        <div class="text-xs">Opening balance</div>
         <div class="text-lg font-semibold">Rs {{ b.openingBalance | number: '1.2-2' }}</div>
       </div>
       <div class="bg-white border border-border rounded-md p-3">
-        <div class="text-xs text-ink-muted">Money in</div>
+        <div class="text-xs">Money in</div>
         <div class="text-lg font-semibold text-green-700">Rs {{ b.totalIn | number: '1.2-2' }}</div>
       </div>
       <div class="bg-white border border-border rounded-md p-3">
-        <div class="text-xs text-ink-muted">Money out</div>
+        <div class="text-xs">Money out</div>
         <div class="text-lg font-semibold text-red-700">Rs {{ b.totalOut | number: '1.2-2' }}</div>
       </div>
       <div class="bg-white border border-border rounded-md p-3">
-        <div class="text-xs text-ink-muted">Closing balance</div>
+        <div class="text-xs">Closing balance</div>
         <div class="text-lg font-semibold">Rs {{ b.closingBalance | number: '1.2-2' }}</div>
       </div>
     </div>
@@ -73,7 +73,7 @@
         </tbody>
       </table>
       @if (!b.entries.length) {
-        <div class="py-11 px-5 text-center text-ink-muted">No transactions in this period.</div>
+        <div class="py-11 px-5 text-center">No transactions in this period.</div>
       }
     </div>
   }

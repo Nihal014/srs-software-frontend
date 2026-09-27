@@ -4,13 +4,13 @@
       <div class="w-8 h-8 rounded-md bg-accent text-white flex items-center justify-center font-bold text-xs">RB</div>
       <div class="flex flex-col gap-px">
         <div class="font-semibold text-[15px]">RSR BAKES</div>
-        <div class="text-[10px] tracking-wider uppercase text-ink-muted">Operations &amp; Accounts</div>
+        <div class="text-[10px] tracking-wider uppercase">Operations &amp; Accounts</div>
       </div>
     </div>
 
     @if (submitted()) {
       <h1 class="text-lg font-semibold mb-2">Request submitted</h1>
-      <p class="text-sm text-ink-muted mb-4">
+      <p class="text-sm mb-4">
         Your account has been created and is awaiting Admin approval. You'll be able to sign in once an Admin approves your request.
       </p>
       <button mat-flat-button color="primary" (click)="goToLogin()" class="w-full">Back to sign in</button>
@@ -67,7 +67,7 @@
         </button>
       </form>
 
-      <div class="text-xs text-ink-muted text-center mt-4">
+      <div class="text-xs text-center mt-4">
         Already have an account? <a routerLink="/login" class="text-accent font-medium">Sign in</a>
       </div>
     }

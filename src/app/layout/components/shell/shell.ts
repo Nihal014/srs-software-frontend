@@ -16,6 +16,8 @@ interface NavItem {
   label: string;
   path: string;
   adminOnly?: boolean;
+  /** Label shown to non-admin users when it differs. */
+  staffLabel?: string;
 }
 
 @Component({
@@ -49,13 +51,17 @@ export class Shell {
     { label: 'Bundle Recipes', path: '/bundle-recipes' },
     { label: 'Bundling', path: '/bundling' },
     { label: 'Staff', path: '/staff', adminOnly: true },
-    { label: 'Payroll', path: '/payroll', adminOnly: true },
+    { label: 'Payroll', path: '/payroll', staffLabel: 'Attendance' },
     { label: 'Accounts', path: '/accounts', adminOnly: true },
     { label: 'Master Data', path: '/masters' },
     { label: 'Users', path: '/users', adminOnly: true },
   ];
 
-  readonly navItems = computed(() => this.allNavItems.filter((item) => !item.adminOnly || this.auth.isAdmin()));
+  readonly navItems = computed(() =>
+    this.allNavItems
+      .filter((item) => !item.adminOnly || this.auth.isAdmin())
+      .map((item) => (item.staffLabel && !this.auth.isAdmin() ? { ...item, label: item.staffLabel } : item)),
+  );
 
   private readonly navigationEnd = toSignal(
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)),

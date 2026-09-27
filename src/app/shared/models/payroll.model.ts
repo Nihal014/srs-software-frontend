@@ -32,8 +32,11 @@ export interface DayEntryRow {
   staff_id: number;
   name: string;
   pay_type: PayType;
-  pay_rate: number;
+  /** Null for non-admin users: wages are hidden from them. */
+  pay_rate: number | null;
   entry_id: number | null;
+  in_time: string | null;
+  out_time: string | null;
   hours: number | null;
   amount: number | null;
 }
@@ -41,14 +44,19 @@ export interface DayEntryRow {
 export interface DaySheet {
   date: string;
   rows: DayEntryRow[];
-  total: number;
+  total: number | null;
   staffCount: number;
 }
 
 export interface SaveDayLine {
   staffId: number;
   present: boolean;
+  /** HH:mm, hourly staff. The server works out hours and pay from these. */
+  inTime?: string;
+  outTime?: string;
+  /** Only for entries that predate in/out times. */
   hours?: number;
+  /** Day-rate staff only, admin only. */
   amount?: number;
 }
 

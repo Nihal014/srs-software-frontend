@@ -18,6 +18,7 @@ export interface GrnContextLine {
   item_id: number;
   item_code: string;
   item_name: string;
+  category_name: string | null;
   unit: string;
   qty_ordered: number;
   rate: number;
@@ -71,6 +72,7 @@ export interface GrnDetail {
     id: number;
     item_id: number;
     item_name: string;
+    category_name: string | null;
     unit: string;
     purchase_order_line_id: number;
     qty_received: number;

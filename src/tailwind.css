@@ -23,7 +23,6 @@
 
   --color-ink: #1b1a18;
   --color-ink-soft: #5f5a54;
-  --color-ink-muted: #75706a;
   --color-ink-faint: #8a847c;
 
   --color-accent-50: #f0f9f9;
@@ -38,6 +37,4 @@
   --color-accent-900: #084040;
   --color-accent-950: #052424;
   --color-accent: var(--color-accent-700);
-
-  --font-mono: 'Courier New', monospace;
 }

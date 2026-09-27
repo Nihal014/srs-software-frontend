@@ -75,6 +75,11 @@ export class BundleRecipes implements OnInit {
     return this.items().find((i) => i.id === itemId)?.unit ?? '';
   }
 
+  itemLabel(itemId: number | null): string {
+    const item = this.items().find((i) => i.id === itemId);
+    return item ? `${item.name} (${item.unit})` : '';
+  }
+
   startCreate() {
     this.editing.set('new');
     this.form.reset({ code: '', name: '', outputUnit: UNITS[1], sellingPrice: 0, isActive: true });

@@ -14,7 +14,7 @@
           <mat-icon class="text-amber-700">info</mat-icon>
         </button>
       </div>
-      <div class="mt-1 text-ink-muted">
+      <div class="mt-1">
         Each entry is the <span class="font-medium">total value of all unsold stock on that date</span>. Only the newest entry is used, and it is
         added to your income in Profit &amp; Loss and to the company total. Whenever your stock changes (some sold, new production added), record
         a fresh entry with the current total. If everything is sold, record 0.
@@ -78,7 +78,7 @@
     </table>
 
     @if (!rows().length) {
-      <div class="py-11 px-5 text-center text-ink-muted bg-white rounded-md mt-2">
+      <div class="py-11 px-5 text-center bg-white rounded-md mt-2">
         No stock value recorded yet, so Profit &amp; Loss counts finished stock as 0.
       </div>
     }

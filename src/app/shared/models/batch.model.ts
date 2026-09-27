@@ -3,6 +3,7 @@ export interface Batch {
   batch_number: string;
   item_id: number;
   item_name: string;
+  category_name: string | null;
   unit: string;
   item_rate: number;
   grn_line_id: number;
@@ -51,6 +52,7 @@ export interface AdjustBatchPayload {
 export interface StockSummaryRow {
   item_id: number;
   item_name: string;
+  category_name: string | null;
   unit: string;
   /** Stock in unexpired batches — the only stock that can be used. */
   usableQty: number;

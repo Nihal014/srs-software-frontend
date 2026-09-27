@@ -103,6 +103,11 @@
           </td>
         </ng-container>
 
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Category</th>
+          <td mat-cell *matCellDef="let line">{{ itemFor(line.controls.itemId.value)?.category_name || '—' }}</td>
+        </ng-container>
+
         <ng-container matColumnDef="unit">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Unit</th>
           <td mat-cell *matCellDef="let line">{{ itemFor(line.controls.itemId.value)?.unit }}</td>
@@ -202,7 +207,7 @@
           @if (auth.isAdmin()) {
             <button mat-flat-button color="primary" [disabled]="saving()" (click)="approve()">Approve</button>
           } @else {
-            <div class="text-xs text-ink-muted self-center">Waiting on Admin approval.</div>
+            <div class="text-xs self-center">Waiting on Admin approval.</div>
           }
         }
         @case (PO_STATUS.Approved) {

@@ -63,7 +63,7 @@
     </table>
 
     @if (!rows().length) {
-      <div class="py-11 px-5 text-center text-ink-muted bg-white rounded-md mt-2">No GRNs posted yet.</div>
+      <div class="py-11 px-5 text-center bg-white rounded-md mt-2">No GRNs posted yet.</div>
     }
     <mat-paginator [length]="total()" [pageSize]="pageSize()" [pageIndex]="page() - 1" [pageSizeOptions]="[25, 50, 100]" (page)="onPage($event)" />
   }

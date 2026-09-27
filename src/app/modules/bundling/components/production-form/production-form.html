@@ -45,7 +45,7 @@
           <input type="checkbox" formControlName="laborFromPayroll" />
           Use this day's payroll for labour (shared across the day's runs)
         </label>
-        <div class="text-xs text-ink-muted mt-1">
+        <div class="text-xs mt-1">
           @if (!d.wages) {
             No payroll is entered for this date, so type the labour cost by hand (or enter wages under Payroll first).
           } @else if (sharedLaborPreview; as p) {

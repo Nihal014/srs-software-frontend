@@ -72,7 +72,7 @@ export class PoDetail implements OnInit {
   readonly deliveryLocations = signal<DeliveryLocation[]>([]);
   readonly paymentTerms = PAYMENT_TERMS;
   readonly PO_STATUS = PO_STATUS;
-  readonly lineColumns = ['slno', 'item', 'unit', 'qty', 'rate', 'tax', 'discount', 'total', 'remove'];
+  readonly lineColumns = ['slno', 'item', 'category', 'unit', 'qty', 'rate', 'tax', 'discount', 'total', 'remove'];
   readonly grnColumns = ['slno', 'grn_number', 'received_date', 'qty_received', 'qty_accepted', 'qty_rejected', 'batch_numbers'];
 
   readonly loading = signal(true);

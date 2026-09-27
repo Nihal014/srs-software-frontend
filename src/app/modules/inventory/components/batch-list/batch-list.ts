@@ -26,6 +26,7 @@ export class BatchList implements OnInit {
     'slno',
     'batch_number',
     'item_name',
+    'category',
     'qty_available',
     'mfg_date',
     'expiry_date',

@@ -1,6 +1,9 @@
 <div [formGroup]="form">
   <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
-    <div class="text-sm">Tick who worked and enter hours. Pay is worked out from each person's rate.</div>
+    <div class="text-sm">
+      Tick who worked. For hourly staff enter the in and out time (e.g. 6:30 AM and 3:00 PM) and the hours{{ isAdmin ? ' and pay are' : ' are' }}
+      worked out automatically. An out time earlier than the in time is counted as past midnight.
+    </div>
     <app-date-field class="w-52" label="Date" formControlName="date" />
   </div>
 
@@ -31,15 +34,42 @@
         </td>
       </ng-container>
 
-      <ng-container matColumnDef="hours">
-        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Hours</th>
-        <td mat-cell *matCellDef="let line" class="text-right" [formGroup]="line">
+      <ng-container matColumnDef="in">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">In time</th>
+        <td mat-cell *matCellDef="let line" [formGroup]="line">
           @if (line.controls.payType.value === PAY_TYPE.Hourly) {
-            <mat-form-field appearance="outline" class="dense-field w-24">
-              <input matInput type="number" step="0.05" formControlName="hours" />
+            <mat-form-field appearance="outline" class="dense-field w-32">
+              <input matInput type="time" formControlName="inTime" aria-label="In time" />
             </mat-form-field>
           } @else {
-            <span class="text-ink-muted">—</span>
+            <span>—</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="out">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Out time</th>
+        <td mat-cell *matCellDef="let line" [formGroup]="line">
+          @if (line.controls.payType.value === PAY_TYPE.Hourly) {
+            <mat-form-field appearance="outline" class="dense-field w-32">
+              <input matInput type="time" formControlName="outTime" aria-label="Out time" />
+            </mat-form-field>
+          } @else {
+            <span>—</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="hours">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Hours</th>
+        <td mat-cell *matCellDef="let line" class="text-right">
+          @if (line.controls.payType.value === PAY_TYPE.Hourly && line.controls.hours.value > 0) {
+            {{ line.controls.hours.value | number: '1.2-2' }}
+            @if (pastMidnight(line)) {
+              <div class="text-xs">past midnight</div>
+            }
+          } @else {
+            <span>—</span>
           }
         </td>
       </ng-container>
@@ -47,9 +77,17 @@
       <ng-container matColumnDef="amount">
         <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Amount (Rs)</th>
         <td mat-cell *matCellDef="let line" class="text-right" [formGroup]="line">
-          <mat-form-field appearance="outline" class="dense-field w-28">
-            <input matInput type="number" step="0.01" formControlName="amount" />
-          </mat-form-field>
+          @if (line.controls.payType.value === PAY_TYPE.Hourly) {
+            @if (line.controls.present.value && line.controls.amount.value !== null) {
+              {{ line.controls.amount.value | number: '1.2-2' }}
+            } @else {
+              <span>—</span>
+            }
+          } @else {
+            <mat-form-field appearance="outline" class="dense-field w-28">
+              <input matInput type="number" step="0.01" formControlName="amount" />
+            </mat-form-field>
+          }
         </td>
       </ng-container>
 
@@ -64,13 +102,16 @@
     }
 
     @if (!lines.length) {
-      <div class="py-11 px-5 text-center text-ink-muted bg-white rounded-md mt-2">
-        No staff yet. Add people in the Staff menu first.
+      <div class="py-11 px-5 text-center bg-white rounded-md mt-2">
+        No staff yet. An admin needs to add people in the Staff menu first.
       </div>
     } @else {
       <div class="mt-4 flex items-center gap-4">
-        <div class="text-sm font-mono">
-          {{ totals.staffCount }} worked &middot; Total Rs {{ totals.total | number: '1.2-2' }}
+        <div class="text-sm">
+          {{ totals.staffCount }} worked
+          @if (isAdmin) {
+            &middot; Total Rs {{ totals.total | number: '1.2-2' }}
+          }
         </div>
         <button mat-flat-button color="primary" [disabled]="saving()" (click)="save()">
           {{ saving() ? 'Saving…' : 'Save day' }}

@@ -69,8 +69,9 @@
             <mat-form-field appearance="outline" class="dense-field flex-1">
               <mat-label>Ingredient</mat-label>
               <mat-select formControlName="itemId">
+                <mat-select-trigger>{{ itemLabel(line.controls.itemId.value) }}</mat-select-trigger>
                 @for (item of items(); track item.id) {
-                  <mat-option [value]="item.id">{{ item.name }} ({{ item.unit }})</mat-option>
+                  <mat-option [value]="item.id">{{ item.name }} ({{ item.unit }})@if (item.category_name) { <span class="text-xs"> &middot; {{ item.category_name }}</span> }</mat-option>
                 }
               </mat-select>
             </mat-form-field>

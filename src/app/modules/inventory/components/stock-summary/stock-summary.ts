@@ -13,7 +13,7 @@ import type { StockSummaryRow } from 'app/shared/models/batch.model';
 export class StockSummary implements OnInit {
   private batchesService = inject(BatchesService);
 
-  readonly columns = ['slno', 'item_name', 'usableQty', 'expiredQty', 'batchCount', 'nearestExpiryDays'];
+  readonly columns = ['slno', 'item_name', 'category', 'usableQty', 'expiredQty', 'batchCount', 'nearestExpiryDays'];
   readonly rows = signal<StockSummaryRow[]>([]);
   readonly loading = signal(true);
 
@@ -24,7 +24,7 @@ export class StockSummary implements OnInit {
         if (b.qty_available <= 0) continue;
         let row = byItem.get(b.item_id);
         if (!row) {
-          row = { item_id: b.item_id, item_name: b.item_name, unit: b.unit, usableQty: 0, expiredQty: 0, batchCount: 0, nearestExpiryDays: null };
+          row = { item_id: b.item_id, item_name: b.item_name, category_name: b.category_name, unit: b.unit, usableQty: 0, expiredQty: 0, batchCount: 0, nearestExpiryDays: null };
           byItem.set(b.item_id, row);
         }
         if (b.days_to_expiry < 0) {

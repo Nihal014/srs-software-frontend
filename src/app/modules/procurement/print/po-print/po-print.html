@@ -7,7 +7,7 @@
       </div>
       <div class="text-right">
         <div class="text-xl font-bold uppercase tracking-wide">Purchase Order</div>
-        <div class="font-mono text-base">{{ d.po.po_number }}</div>
+        <div class="text-base">{{ d.po.po_number }}</div>
         <div>Date: {{ d.po.created_at | date: 'dd/MM/yyyy' }}</div>
         <div>Status: {{ statusLabel[d.po.status] }}</div>
       </div>

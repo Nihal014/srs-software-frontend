@@ -6,46 +6,46 @@
 
     <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 mb-4">
       <div class="bg-white border border-border rounded-md p-4">
-        <div class="text-xs text-ink-muted">Company total</div>
+        <div class="text-xs">Company total</div>
         <div class="text-xl font-semibold">Rs {{ s.companyTotal | number: '1.2-2' }}</div>
-        <div class="text-xs text-ink-muted mt-1">Bank + cash + ready products + amount due from customers</div>
+        <div class="text-xs mt-1">Bank + cash + ready products + amount due from customers</div>
       </div>
       <div class="bg-white border border-border rounded-md p-4">
-        <div class="text-xs text-ink-muted">Total sales</div>
+        <div class="text-xs">Total sales</div>
         <div class="text-xl font-semibold">Rs {{ s.totalSales | number: '1.2-2' }}</div>
       </div>
       <div class="bg-white border border-border rounded-md p-4">
-        <div class="text-xs text-ink-muted">Gross profit</div>
+        <div class="text-xs">Gross profit</div>
         <div class="text-xl font-semibold">Rs {{ s.grossProfit | number: '1.2-2' }}</div>
         @if (s.grossProfitPct !== null) {
-          <div class="text-xs text-ink-muted mt-1">{{ s.grossProfitPct | percent: '1.1-2' }} of sales</div>
+          <div class="text-xs mt-1">{{ s.grossProfitPct | percent: '1.1-2' }} of sales</div>
         }
       </div>
       <div class="bg-white border border-border rounded-md p-4">
-        <div class="text-xs text-ink-muted">Net profit</div>
+        <div class="text-xs">Net profit</div>
         <div class="text-xl font-semibold">Rs {{ s.netProfit | number: '1.2-2' }}</div>
         @if (s.netProfitPct !== null) {
-          <div class="text-xs text-ink-muted mt-1">{{ s.netProfitPct | percent: '1.1-2' }} of sales</div>
+          <div class="text-xs mt-1">{{ s.netProfitPct | percent: '1.1-2' }} of sales</div>
         }
       </div>
       <div class="bg-white border border-border rounded-md p-4">
-        <div class="text-xs text-ink-muted">Due from customers</div>
+        <div class="text-xs">Due from customers</div>
         <div class="text-xl font-semibold">Rs {{ s.dueReceivable | number: '1.2-2' }}</div>
-        <div class="text-xs text-ink-muted mt-1">Sales less customer payments received</div>
+        <div class="text-xs mt-1">Sales less customer payments received</div>
       </div>
       <div class="bg-white border border-border rounded-md p-4">
-        <div class="text-xs text-ink-muted">Ready products</div>
+        <div class="text-xs">Ready products</div>
         <div class="text-xl font-semibold">Rs {{ s.readyProducts.amount | number: '1.2-2' }}</div>
         @if (s.readyProducts.asOf) {
-          <div class="text-xs text-ink-muted mt-1">as of {{ s.readyProducts.asOf | date }}</div>
+          <div class="text-xs mt-1">as of {{ s.readyProducts.asOf | date }}</div>
         }
       </div>
       <div class="bg-white border border-border rounded-md p-4">
-        <div class="text-xs text-ink-muted">Capital invested</div>
+        <div class="text-xs">Capital invested</div>
         <div class="text-xl font-semibold">Rs {{ s.capitalInvestment | number: '1.2-2' }}</div>
       </div>
       <div class="bg-white border border-border rounded-md p-4">
-        <div class="text-xs text-ink-muted">All expenses</div>
+        <div class="text-xs">All expenses</div>
         <div class="text-xl font-semibold">Rs {{ s.allExpenses | number: '1.2-2' }}</div>
       </div>
     </div>
@@ -57,13 +57,13 @@
           <tbody>
             @for (a of s.balances; track a.id) {
               <tr class="border-t border-border">
-                <td class="px-4 py-1.5">{{ a.name }} <span class="text-xs text-ink-muted">({{ typeText(a.accountType) }})</span></td>
+                <td class="px-4 py-1.5">{{ a.name }} <span class="text-xs">({{ typeText(a.accountType) }})</span></td>
                 <td class="px-4 py-1.5 text-right" [class.text-red-700]="a.balance < 0">{{ a.balance | number: '1.2-2' }}</td>
               </tr>
             }
           </tbody>
         </table>
-        <div class="px-4 py-2 text-xs text-ink-muted border-t border-border">
+        <div class="px-4 py-2 text-xs border-t border-border">
           Partner accounts are shown for reference and are not counted in the company total.
         </div>
       </div>

@@ -51,7 +51,7 @@
         <span class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-700"><mat-icon>check_circle</mat-icon></span>
         <div>
           <div class="font-medium">All clear</div>
-          <div class="text-sm text-ink-muted">No purchase orders waiting, nothing to receive, and no low stock.</div>
+          <div class="text-sm">No purchase orders waiting, nothing to receive, and no low stock.</div>
         </div>
       </div>
     } @else {
@@ -67,7 +67,7 @@
               @for (po of d.attention.pendingApproval.items; track po.id) {
                 <li class="py-1.5 border-t border-border first:border-t-0">
                   <a [routerLink]="['/procurement', po.id]" class="record-link text-accent no-underline hover:underline">{{ po.po_number }}</a>
-                  <span class="text-ink-muted"> &middot; {{ po.supplier_name }}</span>
+                  <span> &middot; {{ po.supplier_name }}</span>
                 </li>
               }
             </ul>
@@ -86,11 +86,11 @@
               @for (po of d.attention.awaitingReceipt.items; track po.id) {
                 <li class="py-1.5 border-t border-border first:border-t-0">
                   <a [routerLink]="['/grn/new']" [queryParams]="{ poId: po.id }" class="record-link text-accent no-underline hover:underline">{{ po.po_number }}</a>
-                  <span class="text-ink-muted"> &middot; {{ po.supplier_name }}</span>
+                  <span> &middot; {{ po.supplier_name }}</span>
                   @if (po.overdue) {
                     <span class="ml-1 text-xs font-medium text-red-700">overdue since {{ po.expected_date | date }}</span>
                   } @else if (po.expected_date) {
-                    <span class="ml-1 text-xs text-ink-muted">due {{ po.expected_date | date }}</span>
+                    <span class="ml-1 text-xs">due {{ po.expected_date | date }}</span>
                   }
                 </li>
               }
@@ -110,7 +110,7 @@
               @for (i of d.attention.lowStock.items; track i.id) {
                 <li class="py-1.5 border-t border-border first:border-t-0">
                   {{ i.name }}
-                  <span class="text-ink-muted">&middot; {{ i.qty | number: '1.0-3' }} {{ i.unit }} left (reorder at {{ i.reorder_level | number: '1.0-3' }})</span>
+                  <span>&middot; {{ i.qty | number: '1.0-3' }} {{ i.unit }} left (reorder at {{ i.reorder_level | number: '1.0-3' }})</span>
                 </li>
               }
             </ul>
@@ -124,36 +124,36 @@
     <div class="text-xs font-semibold uppercase tracking-wide text-ink-faint mb-2">Production &amp; stock</div>
     <div class="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-4">
       <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-border p-5">
-        <div class="flex items-center gap-2 text-xs text-ink-muted"><mat-icon class="text-accent-700">today</mat-icon> Made today</div>
-        <div class="text-2xl font-semibold mt-2">{{ d.production.todayUnits | number: '1.0-3' }} <span class="text-base font-medium text-ink-muted">units</span></div>
-        <div class="text-xs text-ink-muted mt-1">{{ d.production.todayRuns }} production run{{ d.production.todayRuns === 1 ? '' : 's' }}</div>
+        <div class="flex items-center gap-2 text-xs"><mat-icon class="text-accent-700">today</mat-icon> Made today</div>
+        <div class="text-2xl font-semibold mt-2">{{ d.production.todayUnits | number: '1.0-3' }} <span class="text-base font-medium">units</span></div>
+        <div class="text-xs mt-1">{{ d.production.todayRuns }} production run{{ d.production.todayRuns === 1 ? '' : 's' }}</div>
       </div>
       <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-border p-5">
-        <div class="flex items-center gap-2 text-xs text-ink-muted"><mat-icon class="text-accent-700">date_range</mat-icon> Made in the last 7 days</div>
-        <div class="text-2xl font-semibold mt-2">{{ d.production.weekUnits | number: '1.0-3' }} <span class="text-base font-medium text-ink-muted">units</span></div>
-        <div class="text-xs text-ink-muted mt-1">{{ d.production.weekRuns }} production run{{ d.production.weekRuns === 1 ? '' : 's' }}</div>
+        <div class="flex items-center gap-2 text-xs"><mat-icon class="text-accent-700">date_range</mat-icon> Made in the last 7 days</div>
+        <div class="text-2xl font-semibold mt-2">{{ d.production.weekUnits | number: '1.0-3' }} <span class="text-base font-medium">units</span></div>
+        <div class="text-xs mt-1">{{ d.production.weekRuns }} production run{{ d.production.weekRuns === 1 ? '' : 's' }}</div>
       </div>
       <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-border p-5">
-        <div class="flex items-center gap-2 text-xs text-ink-muted"><mat-icon class="text-accent-700">category</mat-icon> Items in stock</div>
+        <div class="flex items-center gap-2 text-xs"><mat-icon class="text-accent-700">category</mat-icon> Items in stock</div>
         <div class="text-2xl font-semibold mt-2">{{ d.stock.itemsInStock }}</div>
-        <div class="text-xs text-ink-muted mt-1">With usable (unexpired) stock</div>
+        <div class="text-xs mt-1">With usable (unexpired) stock</div>
       </div>
       @if (d.stock.usableValue !== null) {
         <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-border p-5">
-          <div class="flex items-center gap-2 text-xs text-ink-muted"><mat-icon class="text-accent-700">payments</mat-icon> Usable stock value</div>
+          <div class="flex items-center gap-2 text-xs"><mat-icon class="text-accent-700">payments</mat-icon> Usable stock value</div>
           <div class="text-2xl font-semibold mt-2">Rs {{ d.stock.usableValue | number: '1.2-2' }}</div>
-          <div class="text-xs text-ink-muted mt-1">Raw materials, at current rates</div>
+          <div class="text-xs mt-1">Raw materials, at current rates</div>
         </div>
         <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-border p-5">
-          <div class="flex items-center gap-2 text-xs text-ink-muted"><mat-icon class="text-red-700">warning_amber</mat-icon> Expired stock value</div>
+          <div class="flex items-center gap-2 text-xs"><mat-icon class="text-red-700">warning_amber</mat-icon> Expired stock value</div>
           <div class="text-2xl font-semibold mt-2" [class.text-red-700]="(d.stock.expiredValue ?? 0) > 0">Rs {{ d.stock.expiredValue | number: '1.2-2' }}</div>
-          <div class="text-xs text-ink-muted mt-1">Still on the books until written off</div>
+          <div class="text-xs mt-1">Still on the books until written off</div>
         </div>
       }
     </div>
 
     @if (loadedAt(); as at) {
-      <div class="text-xs text-ink-muted mt-4">Updated {{ at | date: 'HH:mm' }}</div>
+      <div class="text-xs mt-4">Updated {{ at | date: 'HH:mm' }}</div>
     }
   }
 </div>

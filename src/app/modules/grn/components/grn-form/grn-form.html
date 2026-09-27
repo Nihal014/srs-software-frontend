@@ -5,7 +5,7 @@
     <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
   } @else if (viewing() && detail()) {
     <h1 class="text-lg font-semibold m-0 mb-1">{{ detail()!.grn_number }} &mdash; goods received</h1>
-    <div class="text-xs text-ink-muted mb-3">
+    <div class="text-xs mb-3">
       <a [routerLink]="['/procurement', detail()!.purchase_order_id]" class="text-accent no-underline hover:underline">{{ detail()!.po_number }}</a>
       &middot; {{ detail()!.supplier_name }} &middot; {{ detail()!.received_date | date }}
     </div>
@@ -18,7 +18,12 @@
         </ng-container>
         <ng-container matColumnDef="item">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Item</th>
-          <td mat-cell *matCellDef="let l">{{ l.item_name }}</td>
+          <td mat-cell *matCellDef="let l">
+            {{ l.item_name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Category</th>
+          <td mat-cell *matCellDef="let l">{{ l.category_name || '—' }}</td>
         </ng-container>
         <ng-container matColumnDef="ordered">
           <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Received</th>
@@ -48,12 +53,12 @@
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Rejection reason</th>
           <td mat-cell *matCellDef="let l">{{ l.rejection_reason || '—' }}</td>
         </ng-container>
-        <tr mat-header-row *matHeaderRowDef="['slno', 'item', 'ordered', 'prior', 'outstanding', 'received', 'accepted', 'rejected', 'reason']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['slno', 'item', 'ordered', 'prior', 'outstanding', 'received', 'accepted', 'rejected', 'reason']"></tr>
+        <tr mat-header-row *matHeaderRowDef="['slno', 'item', 'category', 'ordered', 'prior', 'outstanding', 'received', 'accepted', 'rejected', 'reason']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['slno', 'item', 'category', 'ordered', 'prior', 'outstanding', 'received', 'accepted', 'rejected', 'reason']"></tr>
       </table>
     </div>
   } @else if (!poId) {
-    <div class="py-11 px-5 text-center text-ink-muted bg-white rounded-md">
+    <div class="py-11 px-5 text-center bg-white rounded-md">
       Pick a purchase order to receive against &mdash; open it from
       <a routerLink="/procurement" class="text-accent">Purchase Orders</a> and use "Receive against this PO".
     </div>
@@ -69,7 +74,12 @@
         </ng-container>
         <ng-container matColumnDef="item">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Item</th>
-          <td mat-cell *matCellDef="let l">{{ l.controls.itemName.value }} ({{ l.controls.unit.value }})</td>
+          <td mat-cell *matCellDef="let l">
+            {{ l.controls.itemName.value }} ({{ l.controls.unit.value }})</td>
+        </ng-container>
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Category</th>
+          <td mat-cell *matCellDef="let l">{{ l.controls.categoryName.value || '—' }}</td>
         </ng-container>
         <ng-container matColumnDef="ordered">
           <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Ordered</th>

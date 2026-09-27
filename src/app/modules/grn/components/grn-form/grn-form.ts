@@ -38,6 +38,7 @@ function createGrnLineGroup(fb: FormBuilder, l: GrnContextLine) {
     {
       purchaseOrderLineId: l.purchase_order_line_id,
       itemName: l.item_name,
+      categoryName: l.category_name ?? '',
       unit: l.unit,
       ordered: l.qty_ordered,
       priorReceived: l.prior_received,
@@ -87,6 +88,7 @@ export class GrnForm implements OnInit {
   readonly lineColumns = [
     'slno',
     'item',
+    'category',
     'ordered',
     'prior',
     'outstanding',

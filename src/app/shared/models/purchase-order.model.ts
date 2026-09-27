@@ -54,6 +54,7 @@ export interface PoLine {
   item_id: number;
   item_code: string;
   item_name: string;
+  category_name: string | null;
   unit: string;
   qty_ordered: number;
   rate: number;
