@@ -1,5 +1,16 @@
 <div>
-  <div class="text-sm mb-3">On-hand stock per item. Only unexpired stock is usable; expired stock stays on the books until it is written off and is never used in production.</div>
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+    <div class="text-sm max-w-3xl">On-hand stock per item. Only unexpired stock is usable; expired stock stays on the books until it is written off and is never used in production.</div>
+    <mat-form-field appearance="outline" class="dense-field w-64" subscriptSizing="dynamic">
+      <mat-label>Location</mat-label>
+      <mat-select [value]="locationId()" (selectionChange)="onLocation($event.value)">
+        <mat-option [value]="null">All locations</mat-option>
+        @for (l of locations(); track l.id) {
+          <mat-option [value]="l.id">{{ l.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
 
   @if (loading()) {
     <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>

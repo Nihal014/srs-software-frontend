@@ -1,6 +1,6 @@
 <div>
   <div class="flex justify-between items-center mb-3">
-    <div class="text-sm">Where suppliers deliver goods to.</div>
+    <div class="text-sm">Places where stock is kept and where suppliers deliver goods. Move stock between them under LTO &amp; LTI.</div>
     @if (!editing()) {
       <button mat-flat-button color="primary" (click)="startCreate()">+ Add location</button>
     }
@@ -19,6 +19,10 @@
           }
         </mat-form-field>
       </div>
+      <label class="flex items-center gap-2 mt-2 text-sm">
+        <input type="checkbox" formControlName="isProduction" />
+        Production site &mdash; Bundling uses ingredient stock from here
+      </label>
       @if (editing() !== 'new') {
         <label class="flex items-center gap-2 mt-2 text-sm">
           <input type="checkbox" formControlName="isActive" />
@@ -41,6 +45,10 @@
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Name</th>
         <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="production">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Production site</th>
+        <td mat-cell *matCellDef="let row">{{ row.is_production ? 'Yes' : '—' }}</td>
       </ng-container>
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Status</th>

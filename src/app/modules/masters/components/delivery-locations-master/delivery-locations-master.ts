@@ -21,7 +21,7 @@ export class DeliveryLocationsMaster implements OnInit {
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
-  readonly columns = ['slno', 'name', 'status', 'edit', 'delete'];
+  readonly columns = ['slno', 'name', 'production', 'status', 'edit', 'delete'];
   readonly locations = signal<DeliveryLocation[]>([]);
   readonly loading = signal(true);
   readonly editing = signal<DeliveryLocation | 'new' | null>(null);
@@ -30,6 +30,7 @@ export class DeliveryLocationsMaster implements OnInit {
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
     isActive: true,
+    isProduction: false,
   });
 
   ngOnInit() {
@@ -46,12 +47,12 @@ export class DeliveryLocationsMaster implements OnInit {
 
   startCreate() {
     this.editing.set('new');
-    this.form.reset({ name: '', isActive: true });
+    this.form.reset({ name: '', isActive: true, isProduction: false });
   }
 
   startEdit(location: DeliveryLocation) {
     this.editing.set(location);
-    this.form.reset({ name: location.name, isActive: !!location.is_active });
+    this.form.reset({ name: location.name, isActive: !!location.is_active, isProduction: !!location.is_production });
   }
 
   cancel() {
@@ -64,8 +65,8 @@ export class DeliveryLocationsMaster implements OnInit {
       return;
     }
     const editing = this.editing();
-    const { name, isActive } = this.form.getRawValue();
-    const payload: UpsertDeliveryLocationPayload = { name: name.trim(), isActive };
+    const { name, isActive, isProduction } = this.form.getRawValue();
+    const payload: UpsertDeliveryLocationPayload = { name: name.trim(), isActive, isProduction };
 
     this.saving.set(true);
     const request = editing === 'new'
@@ -74,7 +75,7 @@ export class DeliveryLocationsMaster implements OnInit {
     request.subscribe({
       next: () => {
         this.saving.set(false);
-        this.snackBar.open('Delivery location saved.', 'Dismiss', { duration: 2500 });
+        this.snackBar.open('Stock location saved.', 'Dismiss', { duration: 2500 });
         this.editing.set(null);
         this.load();
       },
@@ -92,7 +93,7 @@ export class DeliveryLocationsMaster implements OnInit {
         if (!confirmed) return;
         this.deliveryLocationsService.remove(location.id).subscribe({
           next: () => {
-            this.snackBar.open('Delivery location deleted.', 'Dismiss', { duration: 2500 });
+            this.snackBar.open('Stock location deleted.', 'Dismiss', { duration: 2500 });
             this.load();
           },
           error: (err) => {

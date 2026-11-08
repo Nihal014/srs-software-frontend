@@ -1,4 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { DeliveryLocationsService } from 'app/shared/services/delivery-locations.service';
+import type { DeliveryLocation } from 'app/shared/models/delivery-location.model';
+import { ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -35,11 +37,14 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 export class ProductionForm implements OnInit {
   private bundleProductsService = inject(BundleProductsService);
   private productionsService = inject(BundleProductionsService);
+  private locationsService = inject(DeliveryLocationsService);
+  readonly locations = signal<DeliveryLocation[]>([]);
   private snackBar = inject(MatSnackBar);
   private confirmService = inject(ConfirmService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
+  private cdr = inject(ChangeDetectorRef);
   readonly auth = inject(AuthService);
 
   /** The production day this run belongs to (from /bundling/day/:date/new). */
@@ -50,6 +55,8 @@ export class ProductionForm implements OnInit {
   readonly checkingRequirement = signal(false);
   readonly saving = signal(false);
   readonly shortageError = signal<RequirementLine[] | null>(null);
+  /** Quantities typed over the recipe's target, by item id (total for the run). */
+  readonly used = signal<Record<number, number>>({});
   /** That day's payroll picture (Admin only) — drives the shared-labour preview. */
   readonly day = signal<BundleProductionDayDetail | null>(null);
 
@@ -58,15 +65,80 @@ export class ProductionForm implements OnInit {
     qtyProduced: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.001)]),
     laborFromPayroll: this.fb.nonNullable.control(false),
     laborCostPerUnit: this.fb.nonNullable.control(0, [Validators.required, Validators.min(0)]),
-    overheadCostPerUnit: this.fb.nonNullable.control(0, [Validators.required, Validators.min(0)]),
+    locationId: this.fb.control<number | null>(null, Validators.required),
+    otherCosts: this.fb.array<ReturnType<ProductionForm['newCost']>>([]),
     sellingPrice: this.fb.control<number | null>(null, [Validators.min(0)]),
     override: this.fb.nonNullable.control(false),
   });
 
   private requirementTimer: ReturnType<typeof setTimeout> | null = null;
 
+  newCost(name = '', amountPerUnit: number | null = null) {
+    return this.fb.group({
+      name: this.fb.nonNullable.control(name, [Validators.required, Validators.minLength(2)]),
+      amountPerUnit: this.fb.control<number | null>(amountPerUnit, [Validators.required, Validators.min(0)]),
+    });
+  }
+
+  get otherCosts() {
+    return this.form.controls.otherCosts;
+  }
+
+  addCost() {
+    this.otherCosts.push(this.newCost());
+  }
+
+  removeCost(index: number) {
+    this.otherCosts.removeAt(index);
+  }
+
+  /** The other costs per unit added up: becomes this run's overhead per unit. */
+  get otherCostsTotal(): number {
+    return Math.round(this.otherCosts.controls.reduce((a, c) => a + (c.value.amountPerUnit ?? 0), 0) * 100) / 100;
+  }
+
+  /** A run starts from the other costs of the previous run of the same product (they rarely change). */
+  private loadLastCosts(bundleId: number | null) {
+    this.otherCosts.clear();
+    if (!bundleId) return;
+    this.productionsService.lastCosts(bundleId).subscribe((rows) => {
+      if (this.form.controls.bundleProductId.value !== bundleId) return;
+      this.otherCosts.clear();
+      rows.forEach((r) => this.otherCosts.push(this.newCost(r.name, r.amount_per_unit)));
+      this.cdr.markForCheck();
+    });
+  }
+
+  get selectedBundle(): BundleProduct | undefined {
+    return this.bundles().find((b) => b.id === this.form.controls.bundleProductId.value);
+  }
+
+  /** What this run will take of an ingredient: the typed amount, else the recipe's quantity. */
+  usedFor(line: RequirementLine): number {
+    return this.used()[line.itemId] ?? line.required;
+  }
+
+  setUsed(line: RequirementLine, value: string) {
+    const qty = value === '' ? NaN : Number(value);
+    this.used.update((u) => {
+      const next = { ...u };
+      if (Number.isNaN(qty) || qty < 0 || qty === line.required) delete next[line.itemId];
+      else next[line.itemId] = qty;
+      return next;
+    });
+  }
+
+  /** How much of what will be used is missing from usable stock. */
+  shortageFor(line: RequirementLine): number {
+    return Math.max(0, Math.round((this.usedFor(line) - line.available) * 1000) / 1000);
+  }
+
   get hasShortage(): boolean {
-    return this.requirement().some((r) => r.shortage > 0);
+    return this.requirement().some((r) => this.shortageFor(r) > 0);
+  }
+
+  get changedUsage(): boolean {
+    return Object.keys(this.used()).length > 0;
   }
 
   ngOnInit() {
@@ -75,6 +147,13 @@ export class ProductionForm implements OnInit {
       return;
     }
     this.bundleProductsService.list().subscribe((bundles) => this.bundles.set(bundles));
+    this.locationsService.listAll().subscribe((locations) => {
+      const active = locations.filter((l) => !!l.is_active);
+      this.locations.set(active);
+      // Default to the production location (else the first one).
+      const preferred = active.find((l) => !!l.is_production) ?? active[0];
+      if (preferred && !this.form.controls.locationId.value) this.form.controls.locationId.setValue(preferred.id);
+    });
     this.form.controls.bundleProductId.valueChanges.subscribe(() => this.onBundleChange());
     this.form.controls.qtyProduced.valueChanges.subscribe(() => {
       this.onQtyChange();
@@ -114,8 +193,9 @@ export class ProductionForm implements OnInit {
   }
 
   private onBundleChange() {
-    const bundle = this.bundles().find((b) => b.id === this.form.controls.bundleProductId.value);
+    const bundle = this.selectedBundle;
     this.form.controls.sellingPrice.setValue(bundle?.selling_price ?? null);
+    this.loadLastCosts(bundle?.id ?? null);
     this.onQtyChange();
   }
 
@@ -136,6 +216,7 @@ export class ProductionForm implements OnInit {
       this.checkingRequirement.set(true);
       this.productionsService.checkRequirement(bundleProductId, qtyProduced).subscribe({
         next: (lines) => {
+          this.used.set({});
           this.requirement.set(lines);
           this.checkingRequirement.set(false);
         },
@@ -175,9 +256,13 @@ export class ProductionForm implements OnInit {
         qtyProduced: value.qtyProduced!,
         producedDate: this.date,
         ...(value.laborFromPayroll ? { laborFromPayroll: true } : { laborCostPerUnit: value.laborCostPerUnit }),
-        overheadCostPerUnit: value.overheadCostPerUnit,
+        locationId: value.locationId ?? undefined,
+        otherCosts: value.otherCosts.filter((c) => c.name.trim() && c.amountPerUnit !== null).map((c) => ({ name: c.name.trim(), amountPerUnit: c.amountPerUnit! })),
         sellingPrice: value.sellingPrice ?? undefined,
         override: value.override,
+        usedQuantities: this.requirement()
+          .filter((l) => this.usedFor(l) !== l.required)
+          .map((l) => ({ itemId: l.itemId, qty: this.usedFor(l) })),
       })
       .subscribe({
         next: (production) => {

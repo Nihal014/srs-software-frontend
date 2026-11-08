@@ -1,0 +1,153 @@
+@if (creating()) {
+  <div [formGroup]="form">
+    <div class="flex items-center gap-2 mb-1">
+      <button mat-stroked-button class="bg-white" type="button" (click)="cancel()">&larr; Back to audits</button>
+    </div>
+    <h2 class="text-lg font-semibold m-0 mt-3">New stock audit</h2>
+    <div class="text-sm mb-3 max-w-3xl">
+      Count the finished products actually in one location and enter the number for each. Leave a product blank if you did not count it. The
+      system compares your count with what it expected and corrects the stock to match.
+    </div>
+
+    <div class="bg-white border border-border rounded-md p-4 mb-3 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3 max-w-3xl">
+      <mat-form-field appearance="outline">
+        <mat-label>Location counted</mat-label>
+        <mat-select formControlName="locationId">
+          @for (l of locations(); track l.id) {
+            <mat-option [value]="l.id">{{ l.name }}</mat-option>
+          }
+        </mat-select>
+        <mat-error>Choose a location</mat-error>
+      </mat-form-field>
+      <app-date-field label="Audit date" formControlName="auditDate" />
+    </div>
+
+    @if (!locations().length) {
+      <div class="py-11 px-5 text-center bg-white rounded-md">No location holds finished products yet, so there is nothing to count.</div>
+    } @else if (lineGroups().length) {
+      <div class="bg-white border border-border rounded-md p-4 mb-3 overflow-x-auto">
+        <table class="w-full text-sm max-w-3xl">
+          <thead>
+            <tr class="bg-gray-200 text-left">
+              <th class="px-2 py-1.5">Product</th>
+              <th class="px-2 py-1.5 text-right">System says</th>
+              <th class="px-2 py-1.5 text-right">Counted</th>
+              <th class="px-2 py-1.5 text-right">Difference</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of lineGroups(); track l.controls.bundleProductId.value) {
+              <tr class="border-b border-border" [formGroup]="l">
+                <td class="px-2 py-1.5">{{ l.controls.productName.value }}</td>
+                <td class="px-2 py-1.5 text-right">{{ l.controls.system.value | number: '1.0-3' }} {{ l.controls.unit.value }}</td>
+                <td class="px-2 py-1.5 text-right">
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    class="w-28 rounded border border-border px-2 py-1 text-right bg-white"
+                    formControlName="counted"
+                    [attr.aria-label]="'Counted ' + l.controls.productName.value"
+                  />
+                </td>
+                <td class="px-2 py-1.5 text-right">
+                  @if (diffOf(l); as d) {
+                    <span [class.text-red-700]="d < 0" [class.text-green-700]="d > 0">{{ d > 0 ? '+' : '' }}{{ d | number: '1.0-3' }}</span>
+                  } @else if (l.controls.counted.value !== null) {
+                    0
+                  } @else {
+                    &mdash;
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (summary.products) {
+          <div class="text-sm mt-3">
+            {{ summary.products }} counted &middot; net
+            <span class="font-semibold" [class.text-red-700]="summary.pieces < 0">{{ summary.pieces > 0 ? '+' : '' }}{{ summary.pieces | number: '1.0-3' }} pcs</span>
+            (Rs {{ summary.value | number: '1.2-2' }} at cost)
+          </div>
+        }
+      </div>
+
+      <mat-form-field appearance="outline" class="w-full max-w-xl">
+        <mat-label>Remarks (optional)</mat-label>
+        <input matInput formControlName="remarks" maxlength="255" />
+      </mat-form-field>
+
+      <div class="mt-4 flex items-center gap-3">
+        <button mat-flat-button color="primary" type="button" [disabled]="saving()" (click)="save()">
+          {{ saving() ? 'Saving…' : 'Record audit' }}
+        </button>
+        <button mat-stroked-button class="bg-white" type="button" (click)="cancel()">Cancel</button>
+      </div>
+    } @else if (form.controls.locationId.value) {
+      <div class="py-11 px-5 text-center bg-white rounded-md">There are no finished products in this location.</div>
+    }
+  </div>
+} @else {
+  <div class="flex justify-between items-center mb-3 gap-3">
+    <div class="text-sm max-w-2xl">
+      A stock audit is a physical count. The system compares what you counted with what it expected, and the difference is recorded and
+      corrected.
+    </div>
+    @if (auth.isAdmin()) {
+      <button mat-flat-button color="primary" class="shrink-0 whitespace-nowrap" (click)="startCreate()">+ New stock audit</button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else {
+    <table mat-table [dataSource]="rows()" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="audit_number">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Audit No</th>
+        <td mat-cell *matCellDef="let r">{{ r.audit_number }}</td>
+      </ng-container>
+      <ng-container matColumnDef="audit_date">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Date</th>
+        <td mat-cell *matCellDef="let r">{{ r.audit_date | date }}</td>
+      </ng-container>
+      <ng-container matColumnDef="location_name">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Location</th>
+        <td mat-cell *matCellDef="let r">{{ r.location_name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="counted">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Counted</th>
+        <td mat-cell *matCellDef="let r">
+          @for (l of r.lines; track l.product_name) {
+            <div class="py-0.5">
+              {{ l.product_name }}: {{ l.system_qty | number: '1.0-3' }} &rarr; {{ l.counted_qty | number: '1.0-3' }}
+              <span [class.text-red-700]="l.difference < 0" [class.text-green-700]="l.difference > 0">
+                ({{ l.difference > 0 ? '+' : '' }}{{ l.difference | number: '1.0-3' }})
+              </span>
+            </div>
+          }
+          @if (r.remarks) {
+            <div class="text-xs">{{ r.remarks }}</div>
+          }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="net">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Net (pcs)</th>
+        <td mat-cell *matCellDef="let r" class="text-right" [class.text-red-700]="netOf(r) < 0">{{ netOf(r) > 0 ? '+' : '' }}{{ netOf(r) | number: '1.0-3' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="value">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Value (Rs)</th>
+        <td mat-cell *matCellDef="let r" class="text-right" [class.text-red-700]="valueOf(r) < 0">{{ valueOf(r) | number: '1.2-2' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="created_by_name">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Counted by</th>
+        <td mat-cell *matCellDef="let r">{{ r.created_by_name || '—' }}</td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+    @if (!rows().length) {
+      <div class="py-11 px-5 text-center bg-white rounded-md mt-2">No stock audits yet.</div>
+    }
+    <mat-paginator [length]="total()" [pageSize]="pageSize()" [pageIndex]="page() - 1" [pageSizeOptions]="[25, 50, 100]" (page)="onPage($event)" />
+  }
+}

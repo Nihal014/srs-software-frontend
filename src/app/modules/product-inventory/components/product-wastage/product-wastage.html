@@ -1,0 +1,130 @@
+@if (creating()) {
+  <div [formGroup]="form">
+    <button mat-stroked-button class="bg-white" type="button" (click)="cancel()">&larr; Back to wastage</button>
+    <h2 class="text-lg font-semibold m-0 mt-3">Record wastage</h2>
+    <div class="text-sm mb-3 max-w-3xl">
+      Finished pieces that were spoiled, damaged or can't be sold. They leave stock (oldest first) and are valued at what they cost to make.
+    </div>
+
+    @if (!locations().length) {
+      <div class="py-11 px-5 text-center bg-white rounded-md">No finished products are in stock, so there is nothing to write off.</div>
+    } @else {
+      <div class="bg-white border border-border rounded-md p-4 mb-3 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3 max-w-4xl">
+        <mat-form-field appearance="outline">
+          <mat-label>Location</mat-label>
+          <mat-select formControlName="locationId">
+            @for (l of locations(); track l.id) {
+              <mat-option [value]="l.id">{{ l.name }}</mat-option>
+            }
+          </mat-select>
+          <mat-error>Choose a location</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Product</mat-label>
+          <mat-select formControlName="bundleProductId">
+            @for (p of products(); track p.bundle_product_id) {
+              <mat-option [value]="p.bundle_product_id">{{ p.product_name }} ({{ p.qty_available | number: '1.0-3' }} {{ p.output_unit }} in hand)</mat-option>
+            }
+          </mat-select>
+          <mat-error>Choose a product</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Quantity{{ chosen() ? ' (' + chosen()!.output_unit + ')' : '' }}</mat-label>
+          <input matInput type="number" step="any" formControlName="qty" />
+          <mat-error>
+            @if (form.controls.qty.hasError('max')) {
+              Only {{ chosen()?.qty_available | number: '1.0-3' }} in hand
+            } @else {
+              Enter a quantity above 0
+            }
+          </mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Reason</mat-label>
+          <mat-select formControlName="reason">
+            @for (r of reasons; track r) {
+              <mat-option [value]="r">{{ reasonText(r) }}</mat-option>
+            }
+          </mat-select>
+          <mat-error>Choose a reason</mat-error>
+        </mat-form-field>
+        <app-date-field label="Date" formControlName="wastageDate" />
+      </div>
+
+      <mat-form-field appearance="outline" class="w-full max-w-xl">
+        <mat-label>Remarks (optional)</mat-label>
+        <input matInput formControlName="remarks" maxlength="250" />
+      </mat-form-field>
+
+      @if (chosen() && qty() > 0) {
+        <div class="text-sm">
+          Loss at cost: <span class="font-semibold">Rs {{ estimatedValue() | number: '1.2-2' }}</span>
+          ({{ qty() | number: '1.0-3' }} &times; about Rs {{ chosen()!.unit_cost | number: '1.2-2' }})
+        </div>
+      }
+
+      <div class="mt-4 flex items-center gap-3">
+        <button mat-flat-button color="primary" type="button" [disabled]="saving()" (click)="save()">
+          {{ saving() ? 'Saving…' : 'Record wastage' }}
+        </button>
+        <button mat-stroked-button class="bg-white" type="button" (click)="cancel()">Cancel</button>
+      </div>
+    }
+  </div>
+} @else {
+  <div class="flex justify-between items-center mb-3 gap-3">
+    <div class="text-sm max-w-2xl">Finished pieces thrown away or unsellable, and what they cost.</div>
+    @if (auth.isAdmin()) {
+      <button mat-flat-button color="primary" class="shrink-0 whitespace-nowrap" (click)="startCreate()">+ Record wastage</button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else {
+    <table mat-table [dataSource]="rows()" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="wastage_number">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Wastage No</th>
+        <td mat-cell *matCellDef="let r">{{ r.wastage_number }}</td>
+      </ng-container>
+      <ng-container matColumnDef="wastage_date">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Date</th>
+        <td mat-cell *matCellDef="let r">{{ r.wastage_date | date }}</td>
+      </ng-container>
+      <ng-container matColumnDef="location_name">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Location</th>
+        <td mat-cell *matCellDef="let r">{{ r.location_name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="product_name">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Product</th>
+        <td mat-cell *matCellDef="let r">{{ r.product_name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="qty">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Qty</th>
+        <td mat-cell *matCellDef="let r" class="text-right">{{ r.qty | number: '1.0-3' }} {{ r.output_unit }}</td>
+      </ng-container>
+      <ng-container matColumnDef="reason">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Reason</th>
+        <td mat-cell *matCellDef="let r">{{ reasonText(r.reason) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="value">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Loss (Rs)</th>
+        <td mat-cell *matCellDef="let r" class="text-right">{{ r.value | number: '1.2-2' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="remarks">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Remarks</th>
+        <td mat-cell *matCellDef="let r">{{ r.remarks || '—' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="created_by_name">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">By</th>
+        <td mat-cell *matCellDef="let r">{{ r.created_by_name || '—' }}</td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+    @if (!rows().length) {
+      <div class="py-11 px-5 text-center bg-white rounded-md mt-2">No wastage recorded yet.</div>
+    }
+    <mat-paginator [length]="total()" [pageSize]="pageSize()" [pageIndex]="page() - 1" [pageSizeOptions]="[25, 50, 100]" (page)="onPage($event)" />
+  }
+}

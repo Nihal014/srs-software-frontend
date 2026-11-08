@@ -100,6 +100,8 @@ export interface Receipt {
   amount: number;
   account_id: number;
   account_name: string;
+  customer_id: number | null;
+  customer_name: string | null;
   remarks: string | null;
 }
 
@@ -109,6 +111,8 @@ export interface ReceiptPayload {
   description: string;
   amount: number;
   accountId: number;
+  /** Which customer paid; only used for customer payments. */
+  customerId?: number | null;
   remarks?: string;
 }
 
@@ -116,13 +120,18 @@ export interface Sale {
   id: number;
   sale_date: string;
   customer: string | null;
+  customer_id: number | null;
   description: string;
   amount: number;
   remarks: string | null;
+  /** Set when the row was created by a sales invoice or a sales return. */
+  document_number: string | null;
 }
 
 export interface SalePayload {
   saleDate: string;
+  /** A customer from the Customers master; without one, `customer` is a free-text (walk-in) name. */
+  customerId?: number | null;
   customer?: string;
   description: string;
   amount: number;

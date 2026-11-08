@@ -30,6 +30,11 @@ export class BundleProductionsService {
     return this.http.get<Paged<BundleProductionDay>>(`${this.base}/days`, { params: { page: String(page), pageSize: String(pageSize) } });
   }
 
+  /** The other costs of the latest run of a product, to start the next one from. */
+  lastCosts(bundleProductId: number) {
+    return this.http.get<{ name: string; amount_per_unit: number }[]>(`${this.base}/last-costs`, { params: { bundleProductId } });
+  }
+
   getDay(date: string) {
     return this.http.get<BundleProductionDayDetail>(`${this.base}/day`, { params: { date } });
   }

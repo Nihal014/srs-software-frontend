@@ -42,7 +42,13 @@ export class BatchAdjustDialog {
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
-  readonly reasons = Object.values(BATCH_ADJUSTMENT_REASON).map((value) => ({ value, label: BATCH_ADJUSTMENT_REASON_LABEL[value] }));
+  // Returns and transfers write their own adjustment reasons; only these are chosen by hand.
+  readonly reasons = [
+    BATCH_ADJUSTMENT_REASON.Expired,
+    BATCH_ADJUSTMENT_REASON.Damaged,
+    BATCH_ADJUSTMENT_REASON.CountCorrection,
+    BATCH_ADJUSTMENT_REASON.Other,
+  ].map((value) => ({ value, label: BATCH_ADJUSTMENT_REASON_LABEL[value] }));
   readonly saving = signal(false);
   readonly form = this.fb.nonNullable.group({
     direction: this.fb.nonNullable.control<'remove' | 'add'>(this.data.preset?.direction ?? 'remove'),

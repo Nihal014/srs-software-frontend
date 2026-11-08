@@ -4,6 +4,8 @@ export interface Batch {
   item_id: number;
   item_name: string;
   category_name: string | null;
+  location_id: number;
+  location_name: string;
   unit: string;
   item_rate: number;
   grn_line_id: number;
@@ -23,13 +25,16 @@ export interface Batch {
 }
 
 // Numeric code convention, mirrored by hand in the backend (batch.interface.ts).
-export const BATCH_ADJUSTMENT_REASON = { Expired: 1, Damaged: 2, CountCorrection: 3, Other: 4 } as const;
+export const BATCH_ADJUSTMENT_REASON = { Expired: 1, Damaged: 2, CountCorrection: 3, Other: 4, ReturnedToSupplier: 5, TransferredOut: 6, TransferCancelled: 7 } as const;
 export type BatchAdjustmentReason = (typeof BATCH_ADJUSTMENT_REASON)[keyof typeof BATCH_ADJUSTMENT_REASON];
 export const BATCH_ADJUSTMENT_REASON_LABEL: Record<BatchAdjustmentReason, string> = {
   [BATCH_ADJUSTMENT_REASON.Expired]: 'Expired',
   [BATCH_ADJUSTMENT_REASON.Damaged]: 'Damaged / spoiled',
   [BATCH_ADJUSTMENT_REASON.CountCorrection]: 'Stock count correction',
   [BATCH_ADJUSTMENT_REASON.Other]: 'Other',
+  [BATCH_ADJUSTMENT_REASON.ReturnedToSupplier]: 'Returned to supplier',
+  [BATCH_ADJUSTMENT_REASON.TransferredOut]: 'Transferred out',
+  [BATCH_ADJUSTMENT_REASON.TransferCancelled]: 'Transfer cancelled',
 };
 
 export interface BatchAdjustment {

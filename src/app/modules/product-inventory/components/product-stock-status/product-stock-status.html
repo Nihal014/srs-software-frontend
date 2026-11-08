@@ -1,0 +1,111 @@
+@if (loading()) {
+  <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+} @else if (status(); as s) {
+  <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 max-w-4xl mb-4">
+    <div class="bg-white rounded-md shadow-md p-3">
+      <div class="text-xs">Finished pieces in hand</div>
+      <div class="text-xl font-semibold mt-1">{{ totalQty() | number: '1.0-3' }}</div>
+    </div>
+    <div class="bg-white rounded-md shadow-md p-3">
+      <div class="text-xs">Stock value (at cost)</div>
+      <div class="text-xl font-semibold mt-1">Rs {{ totalValue() | number: '1.2-2' }}</div>
+    </div>
+    <div class="bg-white rounded-md shadow-md p-3">
+      <div class="text-xs">On the way (in transit)</div>
+      <div class="text-xl font-semibold mt-1">{{ inTransitQty() | number: '1.0-3' }}</div>
+    </div>
+  </div>
+
+  <div class="text-[11px] tracking-wide uppercase font-semibold mb-2">In hand by location</div>
+  <table mat-table [dataSource]="s.rows" class="w-full rounded-md overflow-hidden">
+    <ng-container matColumnDef="product">
+      <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Product</th>
+      <td mat-cell *matCellDef="let r">{{ r.product_name }}</td>
+    </ng-container>
+    <ng-container matColumnDef="location">
+      <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Location</th>
+      <td mat-cell *matCellDef="let r">{{ r.location_name }}</td>
+    </ng-container>
+    <ng-container matColumnDef="qty">
+      <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">In hand</th>
+      <td mat-cell *matCellDef="let r" class="text-right">{{ r.qty_available | number: '1.0-3' }} {{ r.output_unit }}</td>
+    </ng-container>
+    <ng-container matColumnDef="unit_cost">
+      <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Cost / pc (Rs)</th>
+      <td mat-cell *matCellDef="let r" class="text-right">{{ r.unit_cost | number: '1.2-2' }}</td>
+    </ng-container>
+    <ng-container matColumnDef="value">
+      <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Value (Rs)</th>
+      <td mat-cell *matCellDef="let r" class="text-right">{{ r.stock_value | number: '1.2-2' }}</td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="statusColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: statusColumns"></tr>
+  </table>
+  @if (!s.rows.length) {
+    <div class="py-11 px-5 text-center bg-white rounded-md mt-2">
+      No finished products in stock yet. They appear here when a production run is recorded.
+    </div>
+  }
+
+  @if (s.inTransit.length) {
+    <div class="text-[11px] tracking-wide uppercase font-semibold mt-6 mb-2">On the way</div>
+    <div class="bg-white border border-border rounded-md p-3 max-w-3xl">
+      @for (t of s.inTransit; track t.transfer_id + t.product_name) {
+        <div class="flex flex-wrap justify-between gap-2 py-1.5 text-sm border-b border-border last:border-0">
+          <span>
+            <a [routerLink]="['/product-transfers', t.transfer_id]" class="record-link text-accent font-medium underline">{{ t.transfer_number }}</a>
+            &middot; {{ t.product_name }}
+          </span>
+          <span>{{ t.qty | number: '1.0-3' }} {{ t.output_unit }} &middot; {{ t.from_location_name }} &rarr; {{ t.to_location_name }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  <div class="text-[11px] tracking-wide uppercase font-semibold mt-6 mb-2">Lots in stock (one per production run)</div>
+  <div class="text-xs mb-2">
+    A lot is the pieces one production run made. Moving some to another location splits it (the new lot ends in -T and a number). Cost per piece
+    is that run's unit cost.
+  </div>
+  <table mat-table [dataSource]="lots()" class="w-full rounded-md overflow-hidden">
+    <ng-container matColumnDef="lot">
+      <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Lot</th>
+      <td mat-cell *matCellDef="let r">{{ r.lot_number }}</td>
+    </ng-container>
+    <ng-container matColumnDef="product">
+      <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Product</th>
+      <td mat-cell *matCellDef="let r">{{ r.product_name }}</td>
+    </ng-container>
+    <ng-container matColumnDef="location">
+      <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Location</th>
+      <td mat-cell *matCellDef="let r">{{ r.location_name }}</td>
+    </ng-container>
+    <ng-container matColumnDef="produced">
+      <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Produced on</th>
+      <td mat-cell *matCellDef="let r">{{ r.produced_date | date }}</td>
+    </ng-container>
+    <ng-container matColumnDef="age">
+      <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Age (days)</th>
+      <td mat-cell *matCellDef="let r" class="text-right">{{ r.age_days }}</td>
+    </ng-container>
+    <ng-container matColumnDef="made">
+      <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Made</th>
+      <td mat-cell *matCellDef="let r" class="text-right">{{ r.qty_received | number: '1.0-3' }}</td>
+    </ng-container>
+    <ng-container matColumnDef="qty">
+      <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">In hand</th>
+      <td mat-cell *matCellDef="let r" class="text-right">{{ r.qty_available | number: '1.0-3' }} {{ r.output_unit }}</td>
+    </ng-container>
+    <ng-container matColumnDef="unit_cost">
+      <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Cost / pc (Rs)</th>
+      <td mat-cell *matCellDef="let r" class="text-right">{{ r.unit_cost | number: '1.2-2' }}</td>
+    </ng-container>
+    <ng-container matColumnDef="value">
+      <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Value (Rs)</th>
+      <td mat-cell *matCellDef="let r" class="text-right">{{ r.stock_value | number: '1.2-2' }}</td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="lotColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: lotColumns"></tr>
+  </table>
+  <mat-paginator [length]="lotTotal()" [pageSize]="lotPageSize()" [pageIndex]="lotPage() - 1" [pageSizeOptions]="[25, 50, 100]" (page)="onLotPage($event)" />
+}

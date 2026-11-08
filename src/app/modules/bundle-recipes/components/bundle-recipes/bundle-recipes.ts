@@ -31,7 +31,7 @@ export class BundleRecipes implements OnInit {
   private fb = inject(FormBuilder);
 
   readonly unitOptions = UNITS;
-  readonly columns = ['slno', 'name', 'output_unit', 'selling_price', 'status', 'edit', 'delete'];
+  readonly columns = ['slno', 'name', 'output_unit', 'target_cost', 'selling_price', 'margin', 'status', 'edit', 'delete'];
   readonly bundles = signal<BundleProduct[]>([]);
   readonly items = signal<Item[]>([]);
   readonly loading = signal(true);
@@ -54,7 +54,7 @@ export class BundleRecipes implements OnInit {
   private newLine(itemId: number | null = null, qtyPerUnit: number | null = null) {
     return this.fb.group({
       itemId: this.fb.control<number | null>(itemId, [Validators.required]),
-      qtyPerUnit: this.fb.control<number | null>(qtyPerUnit, [Validators.required, Validators.min(0.0001)]),
+      qtyPerUnit: this.fb.control<number | null>(qtyPerUnit, [Validators.required, Validators.min(0.000001)]),
     });
   }
 
@@ -69,6 +69,38 @@ export class BundleRecipes implements OnInit {
       this.bundles.set(bundles);
       this.loading.set(false);
     });
+  }
+
+  itemRate(itemId: number | null | undefined): number {
+    return this.items().find((i) => i.id === itemId)?.rate ?? 0;
+  }
+
+  /** What one piece costs in this ingredient: qty per piece x the item's current rate. */
+  lineCost(line: { value: Partial<{ itemId: number | null; qtyPerUnit: number | null }> }): number {
+    return Math.round((line.value.qtyPerUnit ?? 0) * this.itemRate(line.value.itemId) * 100) / 100;
+  }
+
+  /** The recipe's target cost per piece: all ingredient costs (quantity x current rate) added up. */
+  get targetCost(): number {
+    return Math.round(this.bomLines.controls.reduce((a, l) => a + this.lineCost(l), 0) * 100) / 100;
+  }
+
+  get margin(): number {
+    return Math.round((this.form.controls.sellingPrice.value - this.targetCost) * 100) / 100;
+  }
+
+  get marginPercent(): number | null {
+    const price = this.form.controls.sellingPrice.value;
+    return price > 0 ? Math.round((this.margin / price) * 1000) / 10 : null;
+  }
+
+  /** Ingredients picked but never bought have no rate yet, so their cost reads as 0. */
+  get hasUnratedIngredient(): boolean {
+    return this.bomLines.controls.some((l) => l.value.itemId !== null && this.itemRate(l.value.itemId) === 0);
+  }
+
+  margin_of(bundle: BundleProduct): number {
+    return Math.round((bundle.selling_price - bundle.target_cost) * 100) / 100;
   }
 
   itemUnit(itemId: number | null): string {

@@ -1,29 +1,103 @@
-// Material's list/toolbar/sidenav look is driven by component-specific CSS
-// custom properties (MDC tokens), not plain background/color — Tailwind
-// utility classes on the host element can't reach them, so this stays SCSS.
+// Material's sidenav/toolbar look is driven by component-specific CSS custom
+// properties (MDC tokens), not plain background/color, so those stay SCSS.
 .shell-nav {
   --mat-sidenav-container-shape: 0;
   background: #1e1d1b !important;
   color: white !important;
 }
 
-.shell-link {
-  --mat-list-list-item-label-text-color: white;
-  --mat-list-list-item-hover-label-text-color: white;
-  --mat-list-list-item-focus-label-text-color: white;
-  color: #b9b4ac;
-}
-
-.shell-link-active {
-  --mat-list-list-item-label-text-color: #1e1d1b;
-  --mat-list-list-item-hover-label-text-color: #1e1d1b;
-  --mat-list-list-item-focus-label-text-color: #1e1d1b;
-  background: white !important;
-  color: #1e1d1b !important;
-
-
-}
-
 .shell-toolbar {
   --mat-toolbar-container-background-color: #fff;
+}
+
+// Main menu rows: Dashboard and the section headers.
+.shell-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #ece8e1;
+  font: 500 14.5px/20px Roboto, sans-serif;
+  letter-spacing: 0.01em;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+}
+
+// The section you are currently inside.
+.shell-top-current {
+  color: #fff;
+
+  .shell-icon {
+    color: #81e4e4;
+  }
+}
+
+.shell-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  color: #a39d94;
+}
+
+.shell-top:hover .shell-icon {
+  color: #fff;
+}
+
+.shell-chevron {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  color: #8a847c;
+}
+
+// Screens inside a section, hung off a thin guide line under the section icon.
+.shell-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 6px 21px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.shell-sublink {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: #c4bfb7;
+  font: 400 13px/20px Roboto, sans-serif;
+  text-decoration: none;
+  transition:
+    background 0.15s,
+    color 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+}
+
+// The page you are on, for both a main menu row and a screen inside a section.
+.shell-item-active,
+.shell-item-active:hover {
+  background: #0d6e6e;
+  color: #fff;
+  font-weight: 500;
+
+  .shell-icon {
+    color: #fff;
+  }
 }

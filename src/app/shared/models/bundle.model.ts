@@ -5,6 +5,8 @@ export interface BundleProduct {
   output_unit: string;
   selling_price: number;
   is_active: boolean;
+  /** Ingredient cost of one piece at the items' current rates. */
+  target_cost: number;
 }
 
 export interface BundleBomLine {
@@ -16,6 +18,8 @@ export interface BundleBomLine {
   category_name?: string | null;
   unit: string;
   qty_per_unit: number;
+  item_rate: number;
+  line_cost: number;
 }
 
 export interface BundleProductDetail extends BundleProduct {
@@ -45,6 +49,8 @@ export interface RequirementLine {
   available: number;
   /** Already-expired stock of this item, not counted in `available`. */
   expired?: number;
+  /** Usable stock in locations Bundling does not draw from. */
+  elsewhere?: number;
   shortage: number;
 }
 
@@ -79,15 +85,34 @@ export interface BundleProductionRow {
   labor_from_payroll: boolean;
   overhead_cost_per_unit: number;
   unit_cost: number;
+  /** The recipe's ingredient cost per piece when the run was recorded; null on older runs. */
+  target_material_cost_per_unit: number | null;
   selling_price: number;
   shortage_override: boolean;
   created_by: number | null;
   created_at: string;
 }
 
+/** One ingredient of a run: the recipe's quantity for the run against what was really used. */
+export interface BundleProductionIngredient {
+  item_id: number;
+  item_name: string;
+  unit: string;
+  target_qty: number;
+  used_qty: number;
+  rate: number;
+  /** (used - target) x rate: positive means the run cost more than the recipe says. */
+  cost_variance: number;
+}
+
 export interface BundleProductionDetail extends BundleProductionRow {
   output_unit: string;
   consumptions: BundleConsumption[];
+  ingredients: BundleProductionIngredient[];
+  /** The named other costs per unit on this run (freezing, packing...). */
+  otherCosts: { name: string; amount_per_unit: number }[];
+  /** Where this run's finished pieces are now (a transfer can split them across locations). */
+  stock: { location_id: number; location_name: string; qty_available: number }[];
 }
 
 export interface CreateProductionPayload {
@@ -97,9 +122,14 @@ export interface CreateProductionPayload {
   laborCostPerUnit?: number;
   /** Admin only: share that day's payroll across the day's payroll-based runs. */
   laborFromPayroll?: boolean;
-  overheadCostPerUnit?: number;
+  /** Named costs per unit besides ingredients and labour; their total is the run's overhead per unit. */
+  otherCosts?: { name: string; amountPerUnit: number }[];
+  /** Stock location the finished pieces are stored in; left out = the production location. */
+  locationId?: number;
   sellingPrice?: number;
   override?: boolean;
+  /** What was really used per ingredient (total for the run); left out = the recipe's quantity. */
+  usedQuantities?: { itemId: number; qty: number }[];
 }
 
 /** One row of the Bundling landing list — a date that has production. `wages` is Admin only. */

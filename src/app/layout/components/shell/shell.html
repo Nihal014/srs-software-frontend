@@ -1,28 +1,44 @@
 <mat-sidenav-container class="h-screen w-full">
-  <mat-sidenav mode="side" opened disableClose class="shell-nav !w-56 !border-0 flex flex-col">
+  <mat-sidenav mode="side" opened disableClose class="shell-nav !w-72 !border-0 flex flex-col">
     <div class="flex items-center gap-2.5 px-4 py-4 border-b border-shell-border">
-      <div class="w-7.5 h-7.5 rounded-md bg-accent text-white flex items-center justify-center font-bold text-xs">
+      <div class="w-8 h-8 rounded-md bg-accent text-white flex items-center justify-center font-bold text-[13px]">
         RB
       </div>
       <div class="flex flex-col gap-px">
-        <div class="text-shell-text-strong font-semibold text-[13px]">RSR BAKES</div>
-        <div class="text-[10px] tracking-wider uppercase text-shell-text-muted">Operations &amp; Accounts</div>
+        <div class="text-shell-text-strong font-semibold text-[15px] tracking-wide">RSR BAKES</div>
+        <div class="text-[10.5px] tracking-wider uppercase text-shell-text">Operations &amp; Accounts</div>
       </div>
     </div>
 
-    <mat-nav-list class="!flex-1 !p-2">
-      @for (item of navItems(); track item.path) {
-        <a
-          mat-list-item
-          [routerLink]="item.path"
-          routerLinkActive="shell-link-active"
-          [routerLinkActiveOptions]="{ exact: false }"
-          class="shell-link !rounded-md !mb-0.5 !text-[13px]"
-        >
-          {{ item.label }}
-        </a>
+    <nav class="px-2.5 py-3" aria-label="Main menu">
+      <a [routerLink]="dashboard.path" routerLinkActive="shell-item-active" class="shell-top">
+        <mat-icon class="shell-icon">dashboard</mat-icon>
+        <span>{{ dashboard.label }}</span>
+      </a>
+
+      @for (section of sections(); track section.label) {
+        <div class="mt-1">
+          <button
+            type="button"
+            class="shell-top"
+            [class.shell-top-current]="activeSection() === section.label"
+            [attr.aria-expanded]="isOpen(section.label)"
+            (click)="toggle(section.label)"
+          >
+            <mat-icon class="shell-icon">{{ section.icon }}</mat-icon>
+            <span class="flex-1">{{ section.label }}</span>
+            <mat-icon class="shell-chevron">{{ isOpen(section.label) ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+          @if (isOpen(section.label)) {
+            <div class="shell-sub">
+              @for (item of section.items; track item.path) {
+                <a [routerLink]="item.path" routerLinkActive="shell-item-active" class="shell-sublink">{{ item.label }}</a>
+              }
+            </div>
+          }
+        </div>
       }
-    </mat-nav-list>
+    </nav>
   </mat-sidenav>
 
   <mat-sidenav-content class="!bg-page">

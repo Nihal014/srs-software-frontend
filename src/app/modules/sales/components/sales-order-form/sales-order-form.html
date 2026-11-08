@@ -1,0 +1,41 @@
+<div class="p-4" [formGroup]="form">
+  <a routerLink="/sales/orders" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Sales orders</a>
+  <h1 class="text-lg font-semibold m-0 mb-1">New sales order</h1>
+  <div class="text-sm mb-3">
+    Record what a customer has ordered. If it came from a quotation, accept the quotation and use "Create sales order" there instead.
+  </div>
+
+  <div class="bg-white border border-border rounded-md p-4 mb-3 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
+    <mat-form-field appearance="outline">
+      <mat-label>Customer</mat-label>
+      <mat-select formControlName="customerId">
+        @for (c of customers(); track c.id) {
+          <mat-option [value]="c.id">{{ c.name }}</mat-option>
+        }
+      </mat-select>
+      <mat-error>Choose a customer</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Sales location (optional)</mat-label>
+      <mat-select formControlName="salesLocationId">
+        <mat-option [value]="null">Not specified</mat-option>
+        @for (l of locations(); track l.id) {
+          <mat-option [value]="l.id">{{ l.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <app-date-field label="Order date" formControlName="orderDate" />
+    <app-date-field label="Expected delivery (optional)" formControlName="expectedDate" />
+  </div>
+
+  <app-sales-lines-editor [lines]="form.controls.lines" [products]="products()" />
+
+  <mat-form-field appearance="outline" class="w-full max-w-xl">
+    <mat-label>Remarks (optional)</mat-label>
+    <input matInput formControlName="remarks" maxlength="255" />
+  </mat-form-field>
+
+  <div class="mt-4">
+    <button mat-flat-button color="primary" [disabled]="saving()" (click)="save()">{{ saving() ? 'Saving…' : 'Create sales order' }}</button>
+  </div>
+</div>

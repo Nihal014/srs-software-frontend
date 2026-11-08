@@ -1,0 +1,21 @@
+<div class="p-4">
+  <h1 class="text-xl font-semibold m-0">Recipe Inventory</h1>
+  <div class="text-sm mt-1 mb-3">Finished products (what Bundling makes): what you have where, physical counts, and wastage.</div>
+  <mat-tab-group animationDuration="0ms">
+    <mat-tab label="Stock Status">
+      <ng-template matTabContent>
+        <div class="pt-4"><app-product-stock-status /></div>
+      </ng-template>
+    </mat-tab>
+    <mat-tab label="Stock Audit">
+      <ng-template matTabContent>
+        <div class="pt-4"><app-product-stock-audit /></div>
+      </ng-template>
+    </mat-tab>
+    <mat-tab label="Wastage">
+      <ng-template matTabContent>
+        <div class="pt-4"><app-product-wastage /></div>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</div>

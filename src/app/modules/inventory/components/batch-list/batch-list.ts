@@ -6,6 +6,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatPaginatorModule, type PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { DeliveryLocationsService } from 'app/shared/services/delivery-locations.service';
+import type { DeliveryLocation } from 'app/shared/models/delivery-location.model';
 import { BatchesService } from 'app/shared/services/batches.service';
 import { AuthService } from 'app/core/services/auth.service';
 import { BATCH_ADJUSTMENT_REASON, expiryStatusLabel, expiryStatusSlug, type Batch } from 'app/shared/models/batch.model';
@@ -14,12 +18,13 @@ import { BatchAdjustDialog, type BatchAdjustDialogData } from '../batch-adjust-d
 @Component({
   selector: 'app-batch-list',
   standalone: true,
-  imports: [DatePipe, RouterLink, MatTableModule, MatButtonModule, MatProgressSpinnerModule, MatPaginatorModule],
+  imports: [DatePipe, RouterLink, MatTableModule, MatButtonModule, MatProgressSpinnerModule, MatPaginatorModule, MatFormFieldModule, MatSelectModule],
   templateUrl: './batch-list.html',
 })
 export class BatchList implements OnInit {
   private batchesService = inject(BatchesService);
   private dialog = inject(MatDialog);
+  private locationsService = inject(DeliveryLocationsService);
   readonly auth = inject(AuthService);
 
   readonly columns = [
@@ -27,6 +32,7 @@ export class BatchList implements OnInit {
     'batch_number',
     'item_name',
     'category',
+    'location',
     'qty_available',
     'mfg_date',
     'expiry_date',
@@ -39,14 +45,23 @@ export class BatchList implements OnInit {
   readonly page = signal(1);
   readonly pageSize = signal(25);
   readonly total = signal(0);
+  readonly locations = signal<DeliveryLocation[]>([]);
+  readonly locationId = signal<number | null>(null);
 
   ngOnInit() {
+    this.locationsService.listAll().subscribe((locations) => this.locations.set(locations));
+    this.load();
+  }
+
+  onLocation(id: number | null) {
+    this.locationId.set(id);
+    this.page.set(1);
     this.load();
   }
 
   load() {
     this.loading.set(true);
-    this.batchesService.listPaged(this.page(), this.pageSize()).subscribe((res) => {
+    this.batchesService.listPaged(this.page(), this.pageSize(), this.locationId()).subscribe((res) => {
       this.rows.set(res.rows);
       this.total.set(res.total);
       this.loading.set(false);

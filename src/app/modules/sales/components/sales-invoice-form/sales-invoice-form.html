@@ -1,0 +1,50 @@
+<div class="p-4" [formGroup]="form">
+  <a routerLink="/sales/invoices" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Sales invoices</a>
+  <h1 class="text-lg font-semibold m-0 mb-1">New sales invoice</h1>
+  @if (context(); as ctx) {
+    <div class="text-sm mb-3">
+      Billing delivery note
+      <a [routerLink]="['/sales/delivery-notes', ctx.note.id]" class="text-accent no-underline hover:underline">{{ ctx.note.dn_number }}</a>
+      ({{ ctx.note.order_number }}, delivered {{ ctx.note.delivery_date | date }}). The lines show what was delivered at the order's rates.
+    </div>
+  } @else {
+    <div class="text-sm mb-3">
+      For a sale with no order behind it (a counter sale), choose the customer and add the products. To bill a delivery, open the
+      delivery note and use "Create invoice".
+    </div>
+  }
+
+  <div class="bg-white border border-border rounded-md p-4 mb-3 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
+    <mat-form-field appearance="outline">
+      <mat-label>Customer</mat-label>
+      <mat-select formControlName="customerId">
+        @for (c of customers(); track c.id) {
+          <mat-option [value]="c.id">{{ c.name }}</mat-option>
+        }
+      </mat-select>
+      <mat-error>Choose a customer</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Sales location (optional)</mat-label>
+      <mat-select formControlName="salesLocationId">
+        <mat-option [value]="null">Not specified</mat-option>
+        @for (l of locations(); track l.id) {
+          <mat-option [value]="l.id">{{ l.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <app-date-field label="Invoice date" formControlName="invoiceDate" />
+    <app-date-field label="Due date" formControlName="dueDate" />
+  </div>
+
+  <app-sales-lines-editor [lines]="form.controls.lines" [products]="products()" />
+
+  <mat-form-field appearance="outline" class="w-full max-w-xl">
+    <mat-label>Remarks (optional)</mat-label>
+    <input matInput formControlName="remarks" maxlength="255" />
+  </mat-form-field>
+
+  <div class="mt-4">
+    <button mat-flat-button color="primary" [disabled]="saving()" (click)="save()">{{ saving() ? 'Saving…' : 'Create invoice' }}</button>
+  </div>
+</div>

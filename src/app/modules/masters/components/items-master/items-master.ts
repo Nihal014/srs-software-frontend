@@ -54,7 +54,7 @@ export class ItemsMaster implements OnInit {
     this.load();
   }
 
-  /** The Master Data tabs stay alive side by side, so re-read the categories whenever the form opens. */
+  /** The Item Code Creation tabs stay alive side by side, so re-read the categories whenever the form opens. */
   private loadCategories() {
     this.categoriesService.listAll().subscribe((categories) => this.categories.set(categories));
   }

@@ -1,0 +1,92 @@
+<div class="p-4">
+  <a routerLink="/sales/quotations" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Quotations</a>
+
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else if (detail(); as d) {
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+      <div>
+        <h1 class="text-lg font-semibold m-0 mb-1">{{ d.quotation_number }}</h1>
+        <div class="text-sm">
+          {{ d.customer_name }}
+          @if (d.location_name) {
+            &middot; {{ d.location_name }}
+          }
+          &middot; {{ d.quotation_date | date }} &middot; valid until {{ d.valid_until | date }}
+          @if (d.created_by_name) {
+            &middot; by {{ d.created_by_name }}
+          }
+        </div>
+        @if (d.order_number) {
+          <div class="text-sm">
+            Order raised:
+            <a [routerLink]="['/sales/orders', d.sales_order_id]" class="text-accent no-underline hover:underline">{{ d.order_number }}</a>
+          </div>
+        }
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <div
+          class="status-chip inline-flex items-center rounded-2xl px-2.5 py-0.5 text-md shadow-md font-medium whitespace-nowrap"
+          [class]="chip(d.status, d.is_expired)"
+        >
+          {{ label(d.status, d.is_expired) }}
+        </div>
+        @if (d.status === STATUS.Open && !d.is_expired) {
+          <button mat-flat-button color="primary" [disabled]="saving()" (click)="accept(d)">Accept</button>
+        }
+        @if (d.status === STATUS.Open) {
+          <button mat-stroked-button class="bg-white" [disabled]="saving()" (click)="reject(d)">Reject</button>
+        }
+        @if (d.status === STATUS.Accepted) {
+          <button mat-flat-button color="primary" [disabled]="saving()" (click)="convert(d)">Create sales order</button>
+        }
+        @if (d.status === STATUS.Open || d.status === STATUS.Rejected) {
+          <button mat-stroked-button class="bg-white" [disabled]="saving()" (click)="remove(d)">Delete</button>
+        }
+      </div>
+    </div>
+
+    @if (d.is_expired) {
+      <div class="text-sm mb-3 text-amber-700">This quotation has passed its valid-until date. Make a new one at today's prices.</div>
+    }
+
+    <div class="bg-white border border-border rounded-md p-4 mb-3 overflow-x-auto">
+      <table mat-table [dataSource]="d.lines" class="w-full min-w-[700px] rounded-md overflow-hidden">
+        <ng-container matColumnDef="slno">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+          <td mat-cell *matCellDef="let l; let i = index" class="w-16">{{ i + 1 }}</td>
+        </ng-container>
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Product</th>
+          <td mat-cell *matCellDef="let l">{{ l.product_name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="qty">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Qty</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.qty }} {{ l.unit }}</td>
+        </ng-container>
+        <ng-container matColumnDef="rate">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Rate (Rs)</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.rate | number: '1.2-2' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="tax">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Tax %</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.tax_percent }}</td>
+        </ng-container>
+        <ng-container matColumnDef="discount">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Discount (Rs)</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.discount | number: '1.2-2' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="amount">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Amount (Rs)</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.amount | number: '1.2-2' }}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns"></tr>
+      </table>
+      <div class="text-sm font-semibold text-right mt-3">Total: Rs {{ d.total | number: '1.2-2' }}</div>
+    </div>
+    @if (d.remarks) {
+      <div class="text-sm">Remarks: {{ d.remarks }}</div>
+    }
+  }
+</div>

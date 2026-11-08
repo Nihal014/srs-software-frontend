@@ -15,8 +15,10 @@ export class BatchesService {
   }
 
   /** Paged batch list for the Batches & Expiry tab. */
-  listPaged(page: number, pageSize: number) {
-    return this.http.get<Paged<Batch>>(this.base, { params: { page: String(page), pageSize: String(pageSize) } });
+  listPaged(page: number, pageSize: number, locationId?: number | null) {
+    const params: Record<string, string> = { page: String(page), pageSize: String(pageSize) };
+    if (locationId) params['locationId'] = String(locationId);
+    return this.http.get<Paged<Batch>>(this.base, { params });
   }
 
   adjustments(batchId: number) {

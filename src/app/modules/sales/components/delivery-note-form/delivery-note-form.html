@@ -1,0 +1,89 @@
+<div class="p-4" [formGroup]="form">
+  <a routerLink="/sales/delivery-notes" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Delivery notes</a>
+  <h1 class="text-lg font-semibold m-0 mb-1">New delivery note</h1>
+  <div class="text-sm mb-3">Pick the sales order the goods were delivered for, then enter how much of each product was handed over.</div>
+
+  <div class="bg-white border border-border rounded-md p-4 mb-3 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
+    <mat-form-field appearance="outline" class="col-span-2">
+      <mat-label>Sales order</mat-label>
+      <mat-select formControlName="orderId">
+        @for (o of orders(); track o.id) {
+          <mat-option [value]="o.id">{{ o.order_number }} &middot; {{ o.customer_name }} &middot; {{ o.order_date | date }}</mat-option>
+        }
+      </mat-select>
+      <mat-error>Choose an order</mat-error>
+    </mat-form-field>
+    <app-date-field label="Delivery date" formControlName="deliveryDate" />
+  </div>
+
+  @if (loadingContext()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else if (context(); as ctx) {
+    <div class="text-xs mb-2">
+      {{ ctx.order.order_number }} &middot; {{ ctx.order.customer_name }}
+      @if (ctx.order.location_name) {
+        &middot; {{ ctx.order.location_name }}
+      }
+    </div>
+
+    <div class="bg-white border border-border rounded-md p-4 mb-3 overflow-x-auto">
+      <table mat-table [dataSource]="lineGroups()" class="w-full min-w-[700px] rounded-md overflow-hidden">
+        <ng-container matColumnDef="slno">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+          <td mat-cell *matCellDef="let l; let i = index" class="w-16">{{ i + 1 }}</td>
+        </ng-container>
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Product</th>
+          <td mat-cell *matCellDef="let l">{{ l.controls.productName.value }} ({{ l.controls.unit.value }})</td>
+        </ng-container>
+        <ng-container matColumnDef="ordered">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Ordered</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.controls.ordered.value }}</td>
+        </ng-container>
+        <ng-container matColumnDef="delivered">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Delivered so far</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.controls.delivered.value }}</td>
+        </ng-container>
+        <ng-container matColumnDef="outstanding">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Left to deliver</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.controls.outstanding.value }}</td>
+        </ng-container>
+        <ng-container matColumnDef="qty">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Delivering now</th>
+          <td mat-cell *matCellDef="let l" class="text-right" [formGroup]="l">
+            <mat-form-field appearance="outline" class="dense-field w-28">
+              <input matInput type="number" formControlName="qty" aria-label="Quantity delivered" />
+            </mat-form-field>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="lineColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: lineColumns" [class.bg-red-50]="qtyError(row)"></tr>
+      </table>
+      @for (l of lines.controls; track l) {
+        @if (qtyError(l); as error) {
+          <div class="text-xs text-red-800 mt-1.5">{{ l.controls.productName.value }}: {{ error }}</div>
+        }
+      }
+    </div>
+
+    <div class="bg-white border border-border rounded-md p-4 mb-3 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
+      <mat-form-field appearance="outline">
+        <mat-label>Received by (optional)</mat-label>
+        <input matInput formControlName="receivedBy" maxlength="100" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Vehicle number (optional)</mat-label>
+        <input matInput formControlName="vehicleNo" maxlength="30" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="col-span-2">
+        <mat-label>Remarks (optional)</mat-label>
+        <input matInput formControlName="remarks" maxlength="255" />
+      </mat-form-field>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <div class="text-sm">{{ totals.lines }} line{{ totals.lines === 1 ? '' : 's' }} being delivered</div>
+      <button mat-flat-button color="primary" [disabled]="saving()" (click)="save()">{{ saving() ? 'Saving…' : 'Record delivery' }}</button>
+    </div>
+  }
+</div>

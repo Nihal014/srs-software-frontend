@@ -26,7 +26,7 @@ export class ProductionDay implements OnInit {
   readonly auth = inject(AuthService);
 
   readonly date = this.route.snapshot.paramMap.get('date') ?? '';
-  readonly columns = ['slno', 'production_number', 'bundle_name', 'qty_produced', 'labor', 'unit_cost', 'selling_price', 'margin', 'action'];
+  readonly columns = ['slno', 'production_number', 'bundle_name', 'qty_produced', 'labor', 'unit_cost', 'vs_target', 'selling_price', 'margin', 'action'];
   readonly day = signal<BundleProductionDayDetail | null>(null);
   readonly loading = signal(true);
   readonly recalculating = signal(false);
@@ -53,6 +53,13 @@ export class ProductionDay implements OnInit {
   laborPerUnit(day: BundleProductionDayDetail): number | null {
     if (day.wages === null || day.payrollUnits <= 0) return null;
     return Math.round((day.wages / day.payrollUnits) * 100) / 100;
+  }
+
+  /** Ingredient cost per unit minus the recipe's target when the run was recorded (null on older runs). */
+  vsTarget(row: { material_cost: number; qty_produced: number; target_material_cost_per_unit: number | null }): number | null {
+    if (row.target_material_cost_per_unit === null) return null;
+    const actual = Number(row.material_cost) / (Number(row.qty_produced) || 1);
+    return Math.round((actual - Number(row.target_material_cost_per_unit)) * 100) / 100;
   }
 
   margin(row: { selling_price: number; unit_cost: number }): number {

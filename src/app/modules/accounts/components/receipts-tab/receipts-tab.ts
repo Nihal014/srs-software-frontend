@@ -10,6 +10,8 @@ import { MatPaginatorModule, type PageEvent } from '@angular/material/paginator'
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DateField } from 'app/shared/components/date-field/date-field';
 import { AccountsService } from 'app/shared/services/accounts.service';
+import { CustomersService } from 'app/shared/services/customers.service';
+import type { Customer } from 'app/shared/models/customer.model';
 import { toDateString } from 'app/shared/utils/date.util';
 import {
   RECEIPT_SOURCE,
@@ -30,11 +32,14 @@ import { ConfirmService } from 'app/shared/services/confirm.service';
 export class ReceiptsTab implements OnInit {
   private confirmService = inject(ConfirmService);
   private api = inject(AccountsService);
+  private customersService = inject(CustomersService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
+  readonly SALES_PAYMENT = RECEIPT_SOURCE.SalesPayment;
+  readonly customers = signal<Customer[]>([]);
   readonly sources = Object.values(RECEIPT_SOURCE).map((value) => ({ value, label: RECEIPT_SOURCE_LABEL[value] }));
-  readonly columns = ['slno', 'date', 'source', 'description', 'amount', 'account', 'edit', 'delete'];
+  readonly columns = ['slno', 'date', 'source', 'description', 'customer', 'amount', 'account', 'edit', 'delete'];
   readonly rows = signal<Receipt[]>([]);
   readonly total = signal(0);
   readonly sum = signal(0);
@@ -58,6 +63,7 @@ export class ReceiptsTab implements OnInit {
     description: ['', [Validators.required, Validators.minLength(2)]],
     amount: [0, [Validators.required, Validators.min(0.01)]],
     accountId: this.fb.control<number | null>(null, Validators.required),
+    customerId: this.fb.control<number | null>(null),
     remarks: '',
   });
 
@@ -67,6 +73,7 @@ export class ReceiptsTab implements OnInit {
 
   ngOnInit() {
     this.api.accounts().subscribe((a) => this.accounts.set(a));
+    this.customersService.listAll().subscribe((customers) => this.customers.set(customers));
     this.load();
   }
 
@@ -104,6 +111,13 @@ export class ReceiptsTab implements OnInit {
     return this.accounts().filter((a) => a.is_active || (editing && editing !== 'new' && editing.account_id === a.id));
   }
 
+  /** Active customers, plus the customer already on the receipt being edited if it has since been deactivated. */
+  pickableCustomers(): Customer[] {
+    const editing = this.editing();
+    const current = editing && editing !== 'new' ? editing.customer_id : null;
+    return this.customers().filter((c) => c.is_active || c.id === current);
+  }
+
   startCreate() {
     this.editing.set('new');
     const first = this.accounts().find((a) => a.is_active);
@@ -113,6 +127,7 @@ export class ReceiptsTab implements OnInit {
       description: '',
       amount: 0,
       accountId: first?.id ?? null,
+      customerId: null,
       remarks: '',
     });
   }
@@ -125,6 +140,7 @@ export class ReceiptsTab implements OnInit {
       description: row.description,
       amount: row.amount,
       accountId: row.account_id,
+      customerId: row.customer_id,
       remarks: row.remarks ?? '',
     });
   }
@@ -145,6 +161,7 @@ export class ReceiptsTab implements OnInit {
       description: v.description.trim(),
       amount: v.amount,
       accountId: v.accountId!,
+      customerId: v.source === RECEIPT_SOURCE.SalesPayment ? v.customerId : null,
       remarks: v.remarks.trim() || undefined,
     };
     const editing = this.editing();

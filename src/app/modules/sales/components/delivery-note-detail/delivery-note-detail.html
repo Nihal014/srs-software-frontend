@@ -1,0 +1,67 @@
+<div class="p-4">
+  <a routerLink="/sales/delivery-notes" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Delivery notes</a>
+
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else if (detail(); as d) {
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+      <div>
+        <h1 class="text-lg font-semibold m-0 mb-1">{{ d.dn_number }} &mdash; goods delivered</h1>
+        <div class="text-sm">
+          {{ d.customer_name }} &middot;
+          <a [routerLink]="['/sales/orders', d.sales_order_id]" class="text-accent no-underline hover:underline">{{ d.order_number }}</a>
+          &middot; {{ d.delivery_date | date }}
+          @if (d.created_by_name) {
+            &middot; by {{ d.created_by_name }}
+          }
+        </div>
+        @if (d.received_by || d.vehicle_no) {
+          <div class="text-sm">
+            @if (d.received_by) {
+              Received by {{ d.received_by }}
+            }
+            @if (d.vehicle_no) {
+              &middot; vehicle {{ d.vehicle_no }}
+            }
+          </div>
+        }
+      </div>
+      <div class="flex items-center gap-3">
+        @if (d.invoice_number) {
+          <div class="text-sm">
+            Invoice:
+            <a [routerLink]="['/sales/invoices', d.invoice_id]" class="text-accent no-underline hover:underline">{{ d.invoice_number }}</a>
+          </div>
+        } @else {
+          <a mat-flat-button color="primary" routerLink="/sales/invoices/new" [queryParams]="{ deliveryNoteId: d.id }">Create invoice</a>
+        }
+      </div>
+    </div>
+
+    <div class="bg-white border border-border rounded-md p-4 mb-3 overflow-x-auto">
+      <table mat-table [dataSource]="d.lines" class="w-full min-w-[500px] rounded-md overflow-hidden">
+        <ng-container matColumnDef="slno">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+          <td mat-cell *matCellDef="let l; let i = index" class="w-16">{{ i + 1 }}</td>
+        </ng-container>
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Product</th>
+          <td mat-cell *matCellDef="let l">{{ l.product_name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="ordered">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Ordered</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.qty_ordered }}</td>
+        </ng-container>
+        <ng-container matColumnDef="delivered">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Delivered</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.qty_delivered }} {{ l.unit }}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns"></tr>
+      </table>
+    </div>
+    @if (d.remarks) {
+      <div class="text-sm">Remarks: {{ d.remarks }}</div>
+    }
+  }
+</div>

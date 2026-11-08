@@ -1,0 +1,197 @@
+<div class="p-4">
+  <a routerLink="/sales/invoices" class="inline-block text-accent no-underline text-xs mb-2.5 hover:underline">&larr; Sales invoices</a>
+
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else if (detail(); as d) {
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+      <div>
+        <h1 class="text-lg font-semibold m-0 mb-1">{{ d.invoice_number }}</h1>
+        <div class="text-sm">
+          {{ d.customer_name }}
+          @if (d.location_name) {
+            &middot; {{ d.location_name }}
+          }
+          @if (d.order_number) {
+            &middot;
+            <a [routerLink]="['/sales/orders', d.sales_order_id]" class="text-accent no-underline hover:underline">{{ d.order_number }}</a>
+          }
+          @if (d.dn_number) {
+            &middot;
+            <a [routerLink]="['/sales/delivery-notes', d.delivery_note_id]" class="text-accent no-underline hover:underline">{{ d.dn_number }}</a>
+          }
+        </div>
+        <div class="text-sm">
+          Invoice date {{ d.invoice_date | date }} &middot; due {{ d.due_date | date }}
+          @if (d.created_by_name) {
+            &middot; entered by {{ d.created_by_name }}
+          }
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <div
+          class="status-chip inline-flex items-center rounded-2xl px-2.5 py-0.5 text-md shadow-md font-medium whitespace-nowrap"
+          [class]="statusChip(d.payment_status, d.is_overdue)"
+        >
+          {{ statusText(d.payment_status, d.is_overdue) }}
+        </div>
+        <a mat-stroked-button class="bg-white" routerLink="/sales/returns/new" [queryParams]="{ invoiceId: d.id }">Return goods</a>
+        @if (!d.payments.length && !d.returns.length) {
+          <button mat-stroked-button class="bg-white" (click)="deleteInvoice(d)">Delete invoice</button>
+        }
+      </div>
+    </div>
+
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3 mb-3">
+      <div class="bg-white rounded-md shadow-md p-4">
+        <div class="text-xs">Invoice amount</div>
+        <div class="text-xl font-semibold mt-1">Rs {{ d.amount | number: '1.2-2' }}</div>
+      </div>
+      <div class="bg-white rounded-md shadow-md p-4">
+        <div class="text-xs">Received</div>
+        <div class="text-xl font-semibold mt-1">Rs {{ d.paid_amount | number: '1.2-2' }}</div>
+      </div>
+      <div class="bg-white rounded-md shadow-md p-4">
+        <div class="text-xs">Goods returned</div>
+        <div class="text-xl font-semibold mt-1">Rs {{ d.credited_amount | number: '1.2-2' }}</div>
+      </div>
+      <div class="bg-white rounded-md shadow-md p-4">
+        <div class="text-xs">{{ d.outstanding < 0 ? 'Credit balance' : 'Outstanding' }}</div>
+        <div class="text-xl font-semibold mt-1" [class.text-red-700]="d.is_overdue">
+          Rs {{ d.outstanding < 0 ? (-d.outstanding | number: '1.2-2') : (d.outstanding | number: '1.2-2') }}
+        </div>
+        @if (d.outstanding < 0) {
+          <div class="text-xs mt-1">More was paid than is now owed</div>
+        }
+      </div>
+    </div>
+
+    <div class="bg-white border border-border rounded-md p-4 mb-3 overflow-x-auto">
+      <table mat-table [dataSource]="d.lines" class="w-full min-w-[800px] rounded-md overflow-hidden">
+        <ng-container matColumnDef="slno">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+          <td mat-cell *matCellDef="let l; let i = index" class="w-16">{{ i + 1 }}</td>
+        </ng-container>
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Product</th>
+          <td mat-cell *matCellDef="let l">{{ l.product_name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="qty">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Qty</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.qty }} {{ l.unit }}</td>
+        </ng-container>
+        <ng-container matColumnDef="returned">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Returned</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.qty_returned || '—' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="rate">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Rate (Rs)</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.rate | number: '1.2-2' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="tax">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Tax %</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.tax_percent }}</td>
+        </ng-container>
+        <ng-container matColumnDef="discount">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Discount (Rs)</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.discount | number: '1.2-2' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="amount">
+          <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Amount (Rs)</th>
+          <td mat-cell *matCellDef="let l" class="text-right">{{ l.amount | number: '1.2-2' }}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="lineColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: lineColumns"></tr>
+      </table>
+    </div>
+    @if (d.remarks) {
+      <div class="text-sm mb-3">Remarks: {{ d.remarks }}</div>
+    }
+
+    @if (d.returns.length) {
+      <h2 class="text-base font-semibold mt-4 mb-2">Sales returns</h2>
+      <div class="bg-white border border-border rounded-md p-4 mb-3">
+        @for (r of d.returns; track r.id) {
+          <div class="text-sm py-1">
+            <a [routerLink]="['/sales/returns', r.id]" class="text-accent no-underline hover:underline">{{ r.return_number }}</a>
+            &middot; {{ r.return_date | date }} &middot; Rs {{ r.total_amount | number: '1.2-2' }}
+          </div>
+        }
+      </div>
+    }
+
+    <h2 class="text-base font-semibold mt-4 mb-2">Payments received</h2>
+    @if (d.payments.length) {
+      <div class="bg-white border border-border rounded-md p-4 mb-3 overflow-x-auto">
+        <table mat-table [dataSource]="d.payments" class="w-full min-w-[600px] rounded-md overflow-hidden">
+          <ng-container matColumnDef="slno">
+            <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+            <td mat-cell *matCellDef="let p; let i = index" class="w-16">{{ i + 1 }}</td>
+          </ng-container>
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Date</th>
+            <td mat-cell *matCellDef="let p">{{ p.payment_date | date }}</td>
+          </ng-container>
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Amount (Rs)</th>
+            <td mat-cell *matCellDef="let p" class="text-right">{{ p.amount | number: '1.2-2' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="account">
+            <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Received into</th>
+            <td mat-cell *matCellDef="let p">{{ p.account_name }}</td>
+          </ng-container>
+          <ng-container matColumnDef="reference">
+            <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Reference</th>
+            <td mat-cell *matCellDef="let p">{{ p.reference || '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="remove">
+            <th mat-header-cell *matHeaderCellDef class="bg-gray-200"></th>
+            <td mat-cell *matCellDef="let p"><button mat-button color="warn" (click)="deletePayment(d, p)">Delete</button></td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="paymentColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: paymentColumns"></tr>
+        </table>
+      </div>
+    } @else {
+      <div class="text-sm mb-3">No payments yet.</div>
+    }
+
+    @if (d.outstanding > 0) {
+      <div class="bg-white border border-border rounded-md p-4 max-w-4xl" [formGroup]="paymentForm">
+        <h2 class="text-base font-semibold m-0 mb-3">Record a payment</h2>
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
+          <app-date-field label="Payment date" formControlName="paymentDate" />
+          <mat-form-field appearance="outline">
+            <mat-label>Amount (Rs)</mat-label>
+            <input matInput type="number" step="0.01" formControlName="amount" />
+            @if (paymentForm.controls.amount.hasError('max')) {
+              <mat-error>Only Rs {{ d.outstanding | number: '1.2-2' }} is outstanding</mat-error>
+            } @else {
+              <mat-error>Enter an amount above 0</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Received into</mat-label>
+            <mat-select formControlName="accountId">
+              @for (a of accounts(); track a.id) {
+                <mat-option [value]="a.id">{{ a.name }}</mat-option>
+              }
+            </mat-select>
+            <mat-error>Choose an account</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Reference (UTR, cheque no.)</mat-label>
+            <input matInput formControlName="reference" maxlength="100" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="col-span-2">
+            <mat-label>Remarks (optional)</mat-label>
+            <input matInput formControlName="remarks" maxlength="255" />
+          </mat-form-field>
+        </div>
+        <button mat-flat-button color="primary" class="mt-4" [disabled]="saving()" (click)="recordPayment(d)">
+          {{ saving() ? 'Saving…' : 'Record payment' }}
+        </button>
+      </div>
+    }
+  }
+</div>

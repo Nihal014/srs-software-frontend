@@ -1,0 +1,66 @@
+<div class="p-4">
+  <div class="flex justify-between items-center mb-4 gap-3">
+    <div>
+      <h1 class="text-xl font-semibold m-0">Delivery Notes</h1>
+      <div class="text-sm mt-1">Goods handed over to customers against a sales order.</div>
+    </div>
+    <a mat-flat-button color="primary" routerLink="/sales/delivery-notes/new" class="shrink-0">+ New delivery note</a>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-15"><mat-spinner diameter="32" /></div>
+  } @else {
+    <table mat-table [dataSource]="rows()" class="w-full rounded-md overflow-hidden">
+      <ng-container matColumnDef="slno">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
+        <td mat-cell *matCellDef="let row; let i = index" class="w-16">{{ (page() - 1) * pageSize() + i + 1 }}</td>
+      </ng-container>
+      <ng-container matColumnDef="dn_number">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Delivery note</th>
+        <td mat-cell *matCellDef="let row">
+          <a [routerLink]="['/sales/delivery-notes', row.id]" class="record-link text-accent font-medium underline">{{ row.dn_number }}</a>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="order_number">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Sales order</th>
+        <td mat-cell *matCellDef="let row">
+          <a [routerLink]="['/sales/orders', row.sales_order_id]" class="record-link text-accent font-medium underline">{{ row.order_number }}</a>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="customer_name">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Customer</th>
+        <td mat-cell *matCellDef="let row">{{ row.customer_name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="delivery_date">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Date</th>
+        <td mat-cell *matCellDef="let row">{{ row.delivery_date | date }}</td>
+      </ng-container>
+      <ng-container matColumnDef="product_names">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Products</th>
+        <td mat-cell *matCellDef="let row">{{ row.product_names }}</td>
+      </ng-container>
+      <ng-container matColumnDef="qty_delivered">
+        <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Qty delivered</th>
+        <td mat-cell *matCellDef="let row" class="text-right">{{ row.qty_delivered }}</td>
+      </ng-container>
+      <ng-container matColumnDef="invoice">
+        <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Invoice</th>
+        <td mat-cell *matCellDef="let row">
+          @if (row.invoice_number) {
+            <a [routerLink]="['/sales/invoices', row.invoice_id]" class="record-link text-accent font-medium underline">{{ row.invoice_number }}</a>
+          } @else {
+            Not invoiced
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+
+    @if (!rows().length) {
+      <div class="py-11 px-5 text-center bg-white rounded-md mt-2">No delivery notes yet.</div>
+    }
+    <mat-paginator [length]="total()" [pageSize]="pageSize()" [pageIndex]="page() - 1" [pageSizeOptions]="[25, 50, 100]" (page)="onPage($event)" />
+  }
+</div>

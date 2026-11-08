@@ -30,7 +30,18 @@
           <div class="text-sm">{{ p.qty_produced }} {{ p.output_unit }}</div>
         </div>
         <div>
-          <div class="text-[11px] tracking-wide uppercase  font-semibold mb-1">Material cost (total)</div>
+          <div class="text-[11px] tracking-wide uppercase  font-semibold mb-1 flex items-center gap-1">
+            Material cost (total)
+            <mat-icon
+              class="cursor-help text-amber-700 !text-lg !w-5 !h-5"
+              tabindex="0"
+              aria-label="How material cost is worked out"
+              [matTooltip]="materialInfo"
+              matTooltipClass="max-w-xs whitespace-pre-line"
+              matTooltipPosition="above"
+              >info</mat-icon
+            >
+          </div>
           <div class="text-sm">Rs {{ p.material_cost | number: '1.2-2' }}</div>
         </div>
         <div>
@@ -64,6 +75,137 @@
     </div>
 
     <div class="bg-white border border-border rounded-md p-4 mb-3">
+      <div class="text-[11px] tracking-wide uppercase font-semibold mb-2">Where the {{ p.qty_produced }} {{ p.output_unit }} are now</div>
+      @if (p.stock.length) {
+        <div class="flex flex-wrap gap-2">
+          @for (s of p.stock; track s.location_id) {
+            <div class="border border-border rounded-md px-3 py-1.5 text-sm">
+              <span class="font-medium">{{ s.location_name }}</span>: {{ s.qty_available | number: '1.0-3' }} {{ p.output_unit }}
+            </div>
+          }
+        </div>
+        <div class="text-xs mt-2">Move them to another location with LTO &amp; LTI under Production.</div>
+      } @else {
+        <div class="text-sm">No pieces from this run are in stock any more.</div>
+      }
+    </div>
+
+    @if (breakdown(p); as b) {
+      <div class="bg-white border border-border rounded-md p-4 mb-3">
+        <div class="flex items-center gap-2 mb-1">
+          <mat-icon class="text-accent" aria-hidden="true">info</mat-icon>
+          <div class="text-[11px] tracking-wide uppercase font-semibold">How the unit cost is worked out</div>
+        </div>
+        <div class="text-xs mb-3">Cost of making one {{ p.output_unit }} in this run, from the figures above. Unit cost = ingredients + labour + other costs.</div>
+
+        <div class="flex h-3 rounded-full overflow-hidden mb-2 max-w-3xl" role="img" [attr.aria-label]="'Unit cost split: ingredients ' + b.pctIngredients + '%, labour ' + b.pctLabour + '%, other costs ' + b.pctOther + '%'">
+          <div class="bg-teal-700" [style.width.%]="b.pctIngredients"></div>
+          <div class="bg-amber-500" [style.width.%]="b.pctLabour"></div>
+          <div class="bg-indigo-500" [style.width.%]="b.pctOther"></div>
+        </div>
+
+        <div class="max-w-3xl">
+          <div class="flex items-start gap-3 py-2.5 border-b border-border">
+            <span class="mt-1.5 h-2.5 w-2.5 rounded-full bg-teal-700 shrink-0"></span>
+            <div class="flex-1">
+              <div class="text-sm font-medium">Ingredients <span class="text-xs font-normal">&middot; {{ b.pctIngredients }}% of the cost</span></div>
+              <div class="text-xs mt-0.5">
+                Rs {{ p.material_cost | number: '1.2-2' }} of ingredients used &divide; {{ p.qty_produced }} {{ p.output_unit }}
+              </div>
+            </div>
+            <div class="text-sm font-semibold whitespace-nowrap">Rs {{ b.ingredients | number: '1.2-2' }}</div>
+          </div>
+
+          <div class="flex items-start gap-3 py-2.5 border-b border-border">
+            <span class="mt-1.5 h-2.5 w-2.5 rounded-full bg-amber-500 shrink-0"></span>
+            <div class="flex-1">
+              <div class="text-sm font-medium">Labour <span class="text-xs font-normal">&middot; {{ b.pctLabour }}% of the cost</span></div>
+              <div class="text-xs mt-0.5">
+                @if (p.labor_from_payroll) {
+                  The day's payroll wages shared across every {{ p.output_unit }} made that day (about Rs {{ b.labour * p.qty_produced | number: '1.0-0' }} for these {{ p.qty_produced }} {{ p.output_unit }})
+                } @else {
+                  Entered by hand for this run
+                }
+              </div>
+            </div>
+            <div class="text-sm font-semibold whitespace-nowrap">Rs {{ b.labour | number: '1.2-2' }}</div>
+          </div>
+
+          <div class="flex items-start gap-3 py-2.5 border-b border-border">
+            <span class="mt-1.5 h-2.5 w-2.5 rounded-full bg-indigo-500 shrink-0"></span>
+            <div class="flex-1">
+              <div class="text-sm font-medium">Other costs <span class="text-xs font-normal">&middot; {{ b.pctOther }}% of the cost</span></div>
+              @if (p.otherCosts.length) {
+                <div class="text-xs mt-1 flex flex-col gap-0.5 max-w-xs">
+                  @for (c of p.otherCosts; track c.name) {
+                    <div class="flex justify-between gap-4">
+                      <span>{{ c.name }}</span>
+                      <span>Rs {{ c.amount_per_unit | number: '1.2-2' }}</span>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="text-xs mt-0.5">None listed for this run</div>
+              }
+            </div>
+            <div class="text-sm font-semibold whitespace-nowrap">Rs {{ b.other | number: '1.2-2' }}</div>
+          </div>
+
+          <div class="flex items-center gap-3 py-2.5 border-b border-border bg-gray-50 -mx-2 px-2">
+            <div class="flex-1 text-sm font-semibold">Unit cost <span class="text-xs font-normal">&middot; ingredients + labour + other costs</span></div>
+            <div class="text-base font-semibold whitespace-nowrap">Rs {{ p.unit_cost | number: '1.2-2' }}</div>
+          </div>
+
+          <div class="flex items-center gap-3 py-2.5">
+            <div class="flex-1 text-sm">
+              Selling price Rs {{ p.selling_price | number: '1.2-2' }} &minus; unit cost Rs {{ p.unit_cost | number: '1.2-2' }}
+              <span class="text-xs">= margin per {{ p.output_unit }}@if (b.marginPct !== null) { ({{ b.marginPct }}% of the price)}</span>
+            </div>
+            <div class="text-base font-semibold whitespace-nowrap" [class.text-red-700]="b.margin < 0" [class.text-green-700]="b.margin >= 0">
+              Rs {{ b.margin | number: '1.2-2' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (p.ingredients.length) {
+      <div class="bg-white border border-border rounded-md p-4 mb-3 overflow-x-auto">
+        <div class="text-[11px] tracking-wide uppercase font-semibold mb-2">Ingredients &mdash; recipe quantity against what was used</div>
+        <table class="w-full text-sm max-w-3xl">
+          <thead>
+            <tr class="bg-gray-200 text-left">
+              <th class="px-2 py-1.5">Ingredient</th>
+              <th class="px-2 py-1.5 text-right">Recipe qty</th>
+              <th class="px-2 py-1.5 text-right">Used</th>
+              <th class="px-2 py-1.5 text-right">Rate (Rs)</th>
+              <th class="px-2 py-1.5 text-right">Cost over / under (Rs)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (i of p.ingredients; track i.item_id) {
+              <tr class="border-b border-border">
+                <td class="px-2 py-1.5">{{ i.item_name }}</td>
+                <td class="px-2 py-1.5 text-right">{{ i.target_qty }} {{ i.unit }}</td>
+                <td class="px-2 py-1.5 text-right">{{ i.used_qty }} {{ i.unit }}</td>
+                <td class="px-2 py-1.5 text-right">{{ i.rate | number: '1.2-2' }}</td>
+                <td class="px-2 py-1.5 text-right" [class.text-red-700]="i.cost_variance > 0" [class.text-green-700]="i.cost_variance < 0">
+                  {{ i.cost_variance > 0 ? '+' : '' }}{{ i.cost_variance | number: '1.2-2' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (ingredientCheck(p); as c) {
+          <div class="text-sm mt-2">
+            Ingredients per {{ p.output_unit }}: recipe target Rs {{ c.target | number: '1.2-2' }}, this run Rs {{ c.actual | number: '1.2-2' }}
+            <span [class.text-red-700]="c.diff > 0" [class.text-green-700]="c.diff < 0">({{ c.diff > 0 ? '+' : '' }}{{ c.diff | number: '1.2-2' }})</span>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="bg-white border border-border rounded-md p-4 mb-3">
       <div class="text-[11px] tracking-wide uppercase  font-semibold mb-2">
         Traceability — ingredients &amp; batches consumed
       </div>
@@ -71,45 +213,55 @@
         <ng-container matColumnDef="slno">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200 w-16 whitespace-nowrap">Sl No</th>
           <td mat-cell *matCellDef="let row; let i = index" class="w-16">{{ i + 1 }}</td>
+          <td mat-footer-cell *matFooterCellDef class="bg-gray-100"></td>
         </ng-container>
         <ng-container matColumnDef="item_name">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Item</th>
           <td mat-cell *matCellDef="let row">{{ row.item_name }}</td>
+          <td mat-footer-cell *matFooterCellDef class="bg-gray-100 font-semibold">Total</td>
         </ng-container>
         <ng-container matColumnDef="qty_consumed">
           <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Qty used</th>
           <td mat-cell *matCellDef="let row" class="text-right">{{ row.qty_consumed }}</td>
+          <td mat-footer-cell *matFooterCellDef class="bg-gray-100"></td>
         </ng-container>
         <ng-container matColumnDef="rate_at_time">
           <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Rate (Rs)</th>
           <td mat-cell *matCellDef="let row" class="text-right">{{ row.rate_at_time | number: '1.2-2' }}</td>
+          <td mat-footer-cell *matFooterCellDef class="bg-gray-100"></td>
         </ng-container>
         <ng-container matColumnDef="cost">
           <th mat-header-cell *matHeaderCellDef class="text-right bg-gray-200">Cost (Rs)</th>
           <td mat-cell *matCellDef="let row" class="text-right">{{ row.cost | number: '1.2-2' }}</td>
+          <td mat-footer-cell *matFooterCellDef class="bg-gray-100 text-right font-semibold">{{ p.material_cost | number: '1.2-2' }}</td>
         </ng-container>
         <ng-container matColumnDef="batch_number">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Batch</th>
           <td mat-cell *matCellDef="let row">{{ row.batch_number }}</td>
+          <td mat-footer-cell *matFooterCellDef class="bg-gray-100"></td>
         </ng-container>
         <ng-container matColumnDef="grn_number">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">GRN</th>
           <td mat-cell *matCellDef="let row">
             <a [routerLink]="['/grn', row.grn_id]" class="record-link text-accent no-underline hover:underline">{{ row.grn_number }}</a>
           </td>
+          <td mat-footer-cell *matFooterCellDef class="bg-gray-100"></td>
         </ng-container>
         <ng-container matColumnDef="po_number">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">PO</th>
           <td mat-cell *matCellDef="let row">
             <a [routerLink]="['/procurement', row.purchase_order_id]" class="record-link text-accent no-underline hover:underline">{{ row.po_number }}</a>
           </td>
+          <td mat-footer-cell *matFooterCellDef class="bg-gray-100"></td>
         </ng-container>
         <ng-container matColumnDef="supplier_name">
           <th mat-header-cell *matHeaderCellDef class="bg-gray-200">Supplier</th>
           <td mat-cell *matCellDef="let row">{{ row.supplier_name }}</td>
+          <td mat-footer-cell *matFooterCellDef class="bg-gray-100"></td>
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="consumptionColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: consumptionColumns"></tr>
+        <tr mat-footer-row *matFooterRowDef="consumptionColumns"></tr>
       </table>
     </div>
   }
