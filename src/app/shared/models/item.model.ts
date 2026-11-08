@@ -12,7 +12,8 @@ export interface Item {
 }
 
 export interface UpsertItemPayload {
-  code: string;
+  /** Left out when creating: the server generates it from the category's code. */
+  code?: string;
   name: string;
   unit: string;
   /** null clears the category; leave it out to keep the current one. */

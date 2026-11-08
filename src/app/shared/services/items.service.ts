@@ -23,6 +23,13 @@ export class ItemsService {
     return this.http.get<Paged<Item>>(this.base, { params: { all: 'true', page: String(page), pageSize: String(pageSize) } });
   }
 
+  /** The code the next item in a category will get, e.g. ING-00024. */
+  nextCode(categoryId: number, name?: string) {
+    const params: Record<string, string> = { categoryId: String(categoryId) };
+    if (name?.trim()) params['name'] = name.trim();
+    return this.http.get<{ prefix: string; code: string }>(`${this.base}/next-code`, { params });
+  }
+
   create(payload: UpsertItemPayload) {
     return this.http.post<Item>(this.base, payload);
   }

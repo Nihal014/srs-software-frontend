@@ -8,10 +8,22 @@
 
   @if (editing()) {
     <div class="bg-white border border-border rounded-md p-4 mb-3" [formGroup]="form">
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3">
-        <mat-form-field appearance="outline">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3 items-start">
+        <mat-form-field appearance="outline" class="col-span-2">
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="categoryId">
+            <mat-option [value]="null">No category</mat-option>
+            @for (c of pickableCategories(); track c.id) {
+              <mat-option [value]="c.id">{{ c.code ? c.code + ' - ' : '' }}{{ c.name }}{{ c.is_active ? '' : ' (inactive)' }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="col-span-2">
           <mat-label>Code</mat-label>
           <input matInput formControlName="code" />
+          @if (editing() === 'new') {
+            <mat-hint>{{ codeHint() }}</mat-hint>
+          }
           @if (form.controls.code.hasError('required')) {
             <mat-error>Code is required</mat-error>
           } @else if (form.controls.code.hasError('minlength')) {
@@ -26,15 +38,6 @@
           } @else if (form.controls.name.hasError('minlength')) {
             <mat-error>At least 2 characters</mat-error>
           }
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="col-span-2">
-          <mat-label>Category</mat-label>
-          <mat-select formControlName="categoryId">
-            <mat-option [value]="null">No category</mat-option>
-            @for (c of pickableCategories(); track c.id) {
-              <mat-option [value]="c.id">{{ c.code ? c.code + ' - ' : '' }}{{ c.name }}{{ c.is_active ? '' : ' (inactive)' }}</mat-option>
-            }
-          </mat-select>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Unit</mat-label>
