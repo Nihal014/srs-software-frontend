@@ -1,6 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { debounceTime } from 'rxjs';
+import { EMPTY, Subject, catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -28,6 +29,13 @@ export class ItemsMaster implements OnInit {
   private categoriesService = inject(ItemCategoriesService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
+
+  /** What the user types in the search box. Debounced, then sent to the server. */
+  private readonly search$ = new Subject<string>();
+  /** Every (re)load goes through here, so a newer request cancels an older one still in flight. */
+  private readonly reload$ = new Subject<void>();
+  readonly search = signal('');
 
   readonly units = UNITS;
   readonly columns = ['slno', 'code', 'name', 'category', 'unit', 'rate', 'reorder_level', 'status', 'edit', 'delete'];
@@ -57,6 +65,35 @@ export class ItemsMaster implements OnInit {
 
   ngOnInit() {
     this.loadCategories();
+
+    // Typing: wait 300 ms after the last key, ignore repeats, go back to page 1 and ask the server.
+    this.search$
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term) => {
+        this.search.set(term);
+        this.page.set(1);
+        this.reload$.next();
+      });
+    // switchMap drops the answer of an older request when a newer one has started.
+    this.reload$
+      .pipe(
+        switchMap(() => {
+          this.loading.set(true);
+          return this.itemsService.listPaged(this.page(), this.pageSize(), this.search()).pipe(
+            catchError((err) => {
+              this.loading.set(false);
+              this.snackBar.open(err.error?.message ?? 'Could not load the items.', 'Dismiss', { duration: 4000 });
+              return EMPTY;
+            }),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((res) => {
+        this.items.set(res.rows);
+        this.total.set(res.total);
+        this.loading.set(false);
+      });
     this.load();
     // New item: the code follows the category and the name. Typing in the Code box takes over from then on.
     this.form.controls.categoryId.valueChanges.subscribe(() => {
@@ -117,12 +154,16 @@ export class ItemsMaster implements OnInit {
   }
 
   load() {
-    this.loading.set(true);
-    this.itemsService.listPaged(this.page(), this.pageSize()).subscribe((res) => {
-      this.items.set(res.rows);
-      this.total.set(res.total);
-      this.loading.set(false);
-    });
+    this.reload$.next();
+  }
+
+  onSearch(term: string) {
+    this.search$.next(term);
+  }
+
+  clearSearch(input: HTMLInputElement) {
+    input.value = '';
+    this.search$.next('');
   }
 
   onPage(e: PageEvent) {

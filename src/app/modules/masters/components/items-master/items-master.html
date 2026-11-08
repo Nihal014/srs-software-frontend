@@ -73,6 +73,18 @@
     </div>
   }
 
+  @if (!editing()) {
+    <div class="mb-3 max-w-md">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Search by name or code</mat-label>
+        <input matInput #searchBox type="text" autocomplete="off" placeholder="e.g. onion or ING-00020" (input)="onSearch(searchBox.value)" />
+        @if (search()) {
+          <button mat-icon-button matSuffix type="button" aria-label="Clear search" (click)="clearSearch(searchBox)">&times;</button>
+        }
+      </mat-form-field>
+    </div>
+  }
+
   @if (!loading()) {
     <table mat-table [dataSource]="items()" class="w-full rounded-md overflow-hidden">
       <ng-container matColumnDef="slno">
@@ -139,7 +151,13 @@
     </table>
 
     @if (!items().length) {
-      <div class="py-11 px-5 text-center bg-white rounded-md mt-2">No items yet. Add the first one.</div>
+      <div class="py-11 px-5 text-center bg-white rounded-md mt-2">
+        @if (search()) {
+          No items match "{{ search() }}".
+        } @else {
+          No items yet. Add the first one.
+        }
+      </div>
     }
     <mat-paginator [length]="total()" [pageSize]="pageSize()" [pageIndex]="page() - 1" [pageSizeOptions]="[25, 50, 100]" (page)="onPage($event)" />
   }

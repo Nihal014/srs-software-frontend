@@ -19,8 +19,10 @@ export class ItemsService {
   }
 
   /** Paged item list for the Items master screen. */
-  listPaged(page: number, pageSize: number) {
-    return this.http.get<Paged<Item>>(this.base, { params: { all: 'true', page: String(page), pageSize: String(pageSize) } });
+  listPaged(page: number, pageSize: number, search?: string) {
+    const params: Record<string, string> = { all: 'true', page: String(page), pageSize: String(pageSize) };
+    if (search?.trim()) params['search'] = search.trim();
+    return this.http.get<Paged<Item>>(this.base, { params });
   }
 
   /** The code the next item in a category will get, e.g. ING-00024. */
